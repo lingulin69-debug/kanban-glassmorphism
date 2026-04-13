@@ -36,7 +36,7 @@ const playClick = () => { resumeAudio(); clickSound.currentTime = 0; clickSound.
 
 function GlassCard({ children, className = "", intensity = "medium", dark = false, ...props }) {
   const bg = dark
-    ? (intensity === "heavy" ? "bg-[#353434]/75 backdrop-blur-2xl backdrop-saturate-[180%]" : intensity === "light" ? "bg-[#353434]/50 backdrop-blur-lg backdrop-saturate-150" : "bg-[#353434]/65 backdrop-blur-xl backdrop-saturate-[180%]")
+    ? (intensity === "heavy" ? "bg-[#3B3B56]/80 backdrop-blur-2xl backdrop-saturate-[180%]" : intensity === "light" ? "bg-[#3B3B56]/50 backdrop-blur-lg backdrop-saturate-150" : "bg-[#3B3B56]/65 backdrop-blur-xl backdrop-saturate-[180%]")
     : (intensity === "heavy" ? "bg-white/75 backdrop-blur-2xl backdrop-saturate-[180%]" : intensity === "light" ? "bg-white/50 backdrop-blur-lg backdrop-saturate-150" : "bg-white/65 backdrop-blur-xl backdrop-saturate-[180%]")
   const border = dark ? "border-transparent" : "border-neutral-200/40"
   return (
@@ -118,7 +118,7 @@ function App() {
   const ls = spacingScale[textSettings.spacing] ?? 1
 
   const theme = dark
-    ? { bg: "#444461", card: "bg-[#353434]/75", cardBorder: "border-[#C24C11]/40", text: "text-neutral-100", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-[#353434]/70", inputBg: "bg-[#3a3939]/60", inputBorder: "border-[#C24C11]/30", pillBg: "bg-[#3a3939]/60", pillActive: "bg-[#454444]", accent: "#F05917", btnBg: "bg-[#F05917]", btnHover: "hover:bg-[#d94e14]", btnText: "text-white", contentText: "#D6D6D6", titleText: "#D65926" }
+    ? { bg: "#444461", card: "bg-[#3B3B56]/80", cardBorder: "border-[#5D5D7A]/50", text: "text-neutral-100", textSub: "text-[#B0B0C8]", textMuted: "text-[#8888A6]", navBg: "bg-[#3B3B56]/80", inputBg: "bg-[#363650]/70", inputBorder: "border-[#5D5D7A]/40", pillBg: "bg-[#363650]/60", pillActive: "bg-[#52526E]", accent: "#F05917", btnBg: "bg-[#F05917]", btnHover: "hover:bg-[#d94e14]", btnText: "text-white", contentText: "#D6D6D6", titleText: "#D65926" }
     : { bg: "#DED5CC", card: "bg-white/65", cardBorder: "border-neutral-200/40", text: "text-neutral-900", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-white/70", inputBg: "bg-white/60", inputBorder: "border-neutral-200/50", pillBg: "bg-neutral-100/60", pillActive: "bg-white", accent: "#F05917", btnBg: "bg-[#F05917]", btnHover: "hover:bg-[#d94e14]", btnText: "text-white", contentText: "#262626", titleText: "#1C1C1C" }
 
   useEffect(() => { localStorage.setItem("theme-dark", String(dark)) }, [dark])
@@ -239,7 +239,7 @@ function App() {
         <div className={`absolute top-1/3 right-0 h-96 w-96 rounded-full blur-2xl ${dark ? 'bg-neutral-600/15' : 'bg-neutral-200/30'}`} />
         <div className={`absolute bottom-0 left-1/3 h-80 w-80 rounded-full blur-2xl ${dark ? 'bg-[#F05917]/8' : 'bg-[#F05917]/5'}`} />
       </div>
-      <nav className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-300 ${dark ? 'border-[#C24C11]/40 bg-[#353434]/80' : 'border-neutral-200/50 bg-white/80'}`}>
+      <nav className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-300 ${dark ? 'border-[#5D5D7A]/40 bg-[#3B3B56]/85' : 'border-neutral-200/50 bg-white/80'}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-4">
           <div className="flex items-center gap-4">
             <h1 className={`text-3xl font-black tracking-tight`} style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.04em' }}>
@@ -259,16 +259,16 @@ function App() {
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => { setDark(!dark); playClick() }}
-              className={`rounded-xl p-2.5 transition-all ${dark ? 'bg-[#454444] text-amber-300 hover:bg-[#505050]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60'}`}>
+              className={`rounded-xl p-2.5 transition-all ${dark ? 'bg-[#52526E] text-[#FFD580] hover:bg-[#5D5D7A]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60'}`}>
               {dark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
             <div className="relative" ref={settingsRef}>
               <button onClick={() => { setShowSettings(!showSettings); playClick() }}
-                className={`rounded-xl p-2.5 transition-all ${showSettings ? (dark ? 'bg-[#F05917] text-white' : 'bg-[#F05917] text-white') : (dark ? 'bg-[#454444] text-neutral-300 hover:bg-[#505050]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60')}`}>
+                className={`rounded-xl p-2.5 transition-all ${showSettings ? (dark ? 'bg-[#F05917] text-white' : 'bg-[#F05917] text-white') : (dark ? 'bg-[#52526E] text-[#C8C8DC] hover:bg-[#5D5D7A]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60')}`}>
                 <Type size={16} />
               </button>
               {showSettings && (
-                <div className={`absolute right-0 top-full mt-2 w-56 rounded-2xl border p-4 shadow-xl z-50 ${dark ? 'border-[#C24C11]/30 bg-[#353434]/98' : 'border-neutral-200/50 bg-white/98'}`}>
+                <div className={`absolute right-0 top-full mt-2 w-56 rounded-2xl border p-4 shadow-xl z-50 ${dark ? 'border-[#5D5D7A]/40 bg-[#3B3B56]/98' : 'border-neutral-200/50 bg-white/98'}`}>
                   <div className={`mb-3 text-[11px] font-bold uppercase tracking-widest ${theme.textSub}`}>文字設定</div>
                   <div className="space-y-3">
                     <div>
@@ -279,7 +279,7 @@ function App() {
                       <div className="flex gap-1">
                         {[0,1,2,3].map(i => (
                           <button key={i} onClick={() => { setTextSettings({...textSettings, size: i}); playClick() }}
-                            className={`flex-1 rounded-lg py-1.5 text-[11px] font-bold transition-all ${textSettings.size === i ? `${theme.btnBg} ${theme.btnText}` : `${dark ? 'bg-[#454444] text-neutral-400' : 'bg-neutral-100 text-neutral-500'} hover:opacity-80`}`}>
+                            className={`flex-1 rounded-lg py-1.5 text-[11px] font-bold transition-all ${textSettings.size === i ? `${theme.btnBg} ${theme.btnText}` : `${dark ? 'bg-[#52526E] text-[#B0B0C8]' : 'bg-neutral-100 text-neutral-500'} hover:opacity-80`}`}>
                             {['S','M','L','XL'][i]}
                           </button>
                         ))}
@@ -300,10 +300,10 @@ function App() {
       {/* Label Filter Bar */}
       {globalLabels.length > 0 && (
         <div className="mx-auto max-w-7xl px-8 pt-5">
-          <div className={`flex items-center gap-2 overflow-x-auto rounded-xl border p-2.5 ${dark ? 'border-white/10 bg-[#353434]/50' : 'border-white/10 bg-white/50'}`} style={{ backdropFilter: 'blur(12px)' }}>
+          <div className={`flex items-center gap-2 overflow-x-auto rounded-xl border p-2.5 ${dark ? 'border-[#5D5D7A]/30 bg-[#3B3B56]/50' : 'border-white/10 bg-white/50'}`} style={{ backdropFilter: 'blur(12px)' }}>
             <Tag size={13} className={theme.textMuted} />
             <button onClick={() => { setFilterLabel(null); playClick() }}
-              className={`shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${!filterLabel ? `${theme.btnBg} ${theme.btnText}` : `${dark ? 'text-neutral-400 hover:bg-[#454444]' : 'text-neutral-500 hover:bg-neutral-100/80'}`}`}>
+              className={`shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${!filterLabel ? `${theme.btnBg} ${theme.btnText}` : `${dark ? 'text-[#B0B0C8] hover:bg-[#52526E]' : 'text-neutral-500 hover:bg-neutral-100/80'}`}`}>
               全部
             </button>
             {globalLabels.map((lb) => (
@@ -343,14 +343,14 @@ function App() {
                 ))}
               </div>
             </div>
-            <div className={`space-y-2 border-t pt-4 ${dark ? 'border-[#C24C11]/30' : 'border-neutral-100/60'}`}>
+            <div className={`space-y-2 border-t pt-4 ${dark ? 'border-[#5D5D7A]/30' : 'border-neutral-100/60'}`}>
               <div className={`text-[11px] font-bold uppercase tracking-widest ${theme.textSub}`}>統計</div>
               {COLUMNS.map((c) => {
                 const count = tasks.filter((t) => t.column === c.id).length
                 return (
                   <div key={c.id} className="flex items-center justify-between rounded-lg px-2 py-1.5">
                     <span className={`text-[12px] font-medium ${theme.textMuted}`}>{c.label}</span>
-                    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${dark ? 'bg-[#454444] text-neutral-300' : 'bg-white/80 text-neutral-700'}`}>{count}</span>
+                    <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${dark ? 'bg-[#52526E] text-[#C8C8DC]' : 'bg-white/80 text-neutral-700'}`}>{count}</span>
                   </div>
                 )
               })}
@@ -383,14 +383,14 @@ function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark
         const colTasks = tasks.filter((t) => t.column === col.id)
         return (
           <div key={col.id}
-            onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("ring-2", "ring-[#C24C11]") }}
-            onDragLeave={(e) => { e.currentTarget.classList.remove("ring-2", "ring-[#C24C11]") }}
-            onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove("ring-2", "ring-[#C24C11]"); if (dragItem) { onDrop(dragItem, col.id); setDragItem(null) } }}
+            onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("ring-2", "ring-[#F05917]") }}
+            onDragLeave={(e) => { e.currentTarget.classList.remove("ring-2", "ring-[#F05917]") }}
+            onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove("ring-2", "ring-[#F05917]"); if (dragItem) { onDrop(dragItem, col.id); setDragItem(null) } }}
             className="rounded-2xl transition-all">
             <div className="mb-3 flex items-center gap-2 px-1">
               <col.icon size={15} style={{ color: col.accent }} />
               <span className={`text-[13px] font-bold ${theme.text}`} style={{ fontSize: `${14 * fs}px` }}>{col.label}</span>
-              <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold shadow-sm ${dark ? 'bg-[#454444] text-neutral-400' : 'bg-white/80 text-neutral-400'}`} style={{ fontSize: `${11 * fs}px` }}>{colTasks.length}</span>
+              <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold shadow-sm ${dark ? 'bg-[#52526E] text-[#B0B0C8]' : 'bg-white/80 text-neutral-400'}`} style={{ fontSize: `${11 * fs}px` }}>{colTasks.length}</span>
             </div>
             <div className="space-y-2.5">
               {colTasks.map((task) => (
@@ -415,7 +415,7 @@ function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark
                 </motion.div>
               ))}
               {colTasks.length === 0 && (
-                <div className={`flex h-[80px] items-center justify-center rounded-2xl border border-dashed ${dark ? 'border-[#C24C11]/40' : 'border-neutral-200/50'}`}>
+                <div className={`flex h-[80px] items-center justify-center rounded-2xl border border-dashed ${dark ? 'border-[#5D5D7A]/40' : 'border-neutral-200/50'}`}>
                   <span className={`text-[12px] ${theme.textMuted}`}>拖曳任務到這裡</span>
                 </div>
               )}
@@ -454,18 +454,18 @@ function CalendarView({ tasks, onEdit, dark, theme, fs, ls }) {
             {curr.toLocaleDateString("zh-TW", { year: "numeric", month: "long" })}
           </h2>
           <div className={`flex items-center gap-1 rounded-lg p-0.5 ${theme.pillBg}`}>
-            <button className={`rounded-md p-1.5 transition-all ${dark ? 'hover:bg-[#454444]' : 'hover:bg-white'}`}
+            <button className={`rounded-md p-1.5 transition-all ${dark ? 'hover:bg-[#52526E]' : 'hover:bg-white'}`}
               onClick={() => { const d = new Date(curr); d.setMonth(d.getMonth() - 1); setCurr(d); playClick() }}>
               <ChevronLeft size={16} className={theme.textSub} />
             </button>
             <button onClick={() => { setCurr(new Date()); playClick() }} className={`px-2.5 py-1 font-semibold ${theme.textSub} hover:${theme.text}`} style={{ fontSize: `${12 * fs}px` }}>今天</button>
-            <button className={`rounded-md p-1.5 transition-all ${dark ? 'hover:bg-[#454444]' : 'hover:bg-white'}`}
+            <button className={`rounded-md p-1.5 transition-all ${dark ? 'hover:bg-[#52526E]' : 'hover:bg-white'}`}
               onClick={() => { const d = new Date(curr); d.setMonth(d.getMonth() + 1); setCurr(d); playClick() }}>
               <ChevronRight size={16} className={theme.textSub} />
             </button>
           </div>
         </div>
-        <div className={`grid grid-cols-7 border-t py-2.5 ${dark ? 'border-[#C24C11]/30' : 'border-neutral-100/60'}`}>
+        <div className={`grid grid-cols-7 border-t py-2.5 ${dark ? 'border-[#5D5D7A]/30' : 'border-neutral-100/60'}`}>
           {weekDays.map((d) => (
             <div key={d} className={`text-center font-bold ${theme.textSub}`} style={{ fontSize: `${11 * fs}px` }}>{d}</div>
           ))}
@@ -474,7 +474,7 @@ function CalendarView({ tasks, onEdit, dark, theme, fs, ls }) {
           {days.map((d, i) => {
             const dayTasks = d.date ? tasks.filter((t) => d.date >= t.startDate && d.date <= t.endDate) : []
             return (
-              <div key={i} className={`min-h-[100px] border-t p-2 transition-colors ${dark ? 'border-[#C24C11]/20 hover:bg-[#3a3939]/40' : 'border-neutral-100/40 hover:bg-white/40'} ${d.type !== "current" ? "opacity-30" : ""}`}>
+              <div key={i} className={`min-h-[100px] border-t p-2 transition-colors ${dark ? 'border-[#5D5D7A]/20 hover:bg-[#363650]/40' : 'border-neutral-100/40 hover:bg-white/40'} ${d.type !== "current" ? "opacity-30" : ""}`}>
                 <span className={`mb-1 inline-flex h-6 w-6 items-center justify-center font-semibold ${d.isToday ? "rounded-full bg-[#F05917] text-white" : theme.text}`} style={{ fontSize: `${12 * fs}px` }}>{d.day}</span>
                 <div className="space-y-0.5">
                   {dayTasks.slice(0, 3).map((t) => (
@@ -582,8 +582,8 @@ function GanttView({ tasks, onEdit, onUpdateDates, dark, theme, fs, ls }) {
             ))}
           </div>
         </div>
-        <div className={`relative border-t ${dark ? 'border-[#C24C11]/30' : 'border-neutral-100/60'}`}>
-          <div className={`flex border-b ${dark ? 'border-[#C24C11]/20' : 'border-neutral-100/40'}`}>
+        <div className={`relative border-t ${dark ? 'border-[#5D5D7A]/30' : 'border-neutral-100/60'}`}>
+          <div className={`flex border-b ${dark ? 'border-[#5D5D7A]/20' : 'border-neutral-100/40'}`}>
             {dateRange.map((d, i) => (
               <div key={i} className="flex-1 py-2 text-center" style={{ minWidth: 0 }}>
                 <div className={`font-bold ${d.toDateString() === today.toDateString() ? theme.text : theme.textSub}`} style={{ fontSize: `${10 * fs}px` }}>
@@ -600,7 +600,7 @@ function GanttView({ tasks, onEdit, onUpdateDates, dark, theme, fs, ls }) {
               const style = getBarStyle(task)
               if (!style) return null
               return (
-                <div key={task.id} className={`group flex items-center gap-3 border-b px-4 py-2.5 ${dark ? 'border-[#C24C11]/20' : 'border-neutral-50/40'}`}>
+                <div key={task.id} className={`group flex items-center gap-3 border-b px-4 py-2.5 ${dark ? 'border-[#5D5D7A]/20' : 'border-neutral-50/40'}`}>
                   <div className="w-[140px] shrink-0 truncate font-black" style={{ fontSize: `${15 * fs}px`, color: theme.titleText }}>{task.title}</div>
                   <div className="relative h-7 flex-1">
                     {/* Ghost preview box during drag */}
@@ -659,7 +659,7 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
   const addTag = () => { if (tagInput.trim() && !form.tags.find(t => t.text === tagInput.trim())) { setForm({ ...form, tags: [...form.tags, { text: tagInput.trim(), color: selectedTagColor }] }); setTagInput(""); setShowTagSuggestions(false) } }
   const addExistingTag = (lb) => { if (!form.tags.find(t => t.text === lb.text)) { setForm({ ...form, tags: [...form.tags, lb] }); setTagInput(""); setShowTagSuggestions(false) } }
   const removeTag = (text) => setForm({ ...form, tags: form.tags.filter((x) => x.text !== text) })
-  const inputClass = `w-full rounded-xl border ${dark ? 'border-[#C24C11]/30 bg-[#3a3939]/60 text-neutral-100' : 'border-neutral-200/60 bg-white/60 text-neutral-800'} px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${dark ? 'focus:ring-[#F05917]/30' : 'focus:ring-neutral-200/50'}`
+  const inputClass = `w-full rounded-xl border ${dark ? 'border-[#5D5D7A]/40 bg-[#363650]/70 text-neutral-100' : 'border-neutral-200/60 bg-white/60 text-neutral-800'} px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${dark ? 'focus:ring-[#F05917]/30' : 'focus:ring-neutral-200/50'}`
   const labelClass = `mb-1.5 block text-[12px] font-bold uppercase tracking-widest ${theme.textSub}`
   const tabs = [
     { id: "basic", label: "基本" },
@@ -672,19 +672,19 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
       transition={{ duration: 0.15 }}
       style={{ willChange: 'opacity' }}>
       <div className={`absolute inset-0 ${dark ? 'bg-black/30' : 'bg-black/15'}`} onClick={onClose} />
-      <motion.div className={`relative w-full max-w-lg rounded-3xl border shadow-2xl ${dark ? 'border-[#C24C11]/40 bg-[#353434]/95' : 'border-neutral-200/50 bg-white/90'}`}
+      <motion.div className={`relative w-full max-w-lg rounded-3xl border shadow-2xl ${dark ? 'border-[#5D5D7A]/40 bg-[#3B3B56]/95' : 'border-neutral-200/50 bg-white/90'}`}
         style={{ willChange: 'transform, opacity' }}
         initial={{ scale: 0.92, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.92, opacity: 0, y: 20 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}>
-        <div className={`flex items-center justify-between border-b p-5 ${dark ? 'border-[#C24C11]/30' : 'border-neutral-100/60'}`}>
+        <div className={`flex items-center justify-between border-b p-5 ${dark ? 'border-[#5D5D7A]/30' : 'border-neutral-100/60'}`}>
           <h3 className={`text-lg font-black ${theme.text}`} style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }}>
             {task ? "編輯任務" : "新增任務"}
           </h3>
-          <button onClick={() => { onClose(); playClick() }} className={`rounded-full p-1.5 transition-all ${dark ? 'hover:bg-[#454444]' : 'hover:bg-neutral-100/80'}`}>
+          <button onClick={() => { onClose(); playClick() }} className={`rounded-full p-1.5 transition-all ${dark ? 'hover:bg-[#52526E]' : 'hover:bg-neutral-100/80'}`}>
             <X size={18} className={theme.textSub} />
           </button>
         </div>
-        <div className={`flex border-b px-5 ${dark ? 'border-[#C24C11]/30' : 'border-neutral-100/60'}`}>
+        <div className={`flex border-b px-5 ${dark ? 'border-[#5D5D7A]/30' : 'border-neutral-100/60'}`}>
           {tabs.map((t) => (
             <button key={t.id} onClick={() => { setTab(t.id); playClick() }}
               className={`relative px-4 py-3 text-[13px] font-bold transition-colors ${tab === t.id ? theme.text : `${theme.textSub} hover:${theme.text}`}`}>
@@ -710,7 +710,7 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
                   <div className="grid grid-cols-4 gap-2">
                     {COLUMNS.map((c) => (
                       <button key={c.id} onClick={() => { setForm({ ...form, column: c.id }); playClick() }}
-                        className={`rounded-xl px-2 py-2 text-[12px] font-bold transition-all ${form.column === c.id ? `${theme.btnBg} text-white shadow-md` : `${dark ? 'bg-[#454444]/80 text-neutral-400 hover:bg-[#505050]' : 'bg-neutral-50/80 text-neutral-500 hover:bg-neutral-100'}`}`}>
+                        className={`rounded-xl px-2 py-2 text-[12px] font-bold transition-all ${form.column === c.id ? `${theme.btnBg} text-white shadow-md` : `${dark ? 'bg-[#52526E]/80 text-[#B0B0C8] hover:bg-[#5D5D7A]' : 'bg-neutral-50/80 text-neutral-500 hover:bg-neutral-100'}`}`}>
                         {c.label}
                       </button>
                     ))}
@@ -760,10 +760,10 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())} placeholder="輸入或選擇標籤..." />
                     <button onClick={() => { addTag(); playClick() }} className={`rounded-xl px-4 text-[12px] font-bold text-white transition-all hover:brightness-90`} style={{ backgroundColor: selectedTagColor }}>加入</button>
                     {showTagSuggestions && tagSuggestions.length > 0 && (
-                      <div className={`absolute left-0 top-full z-50 mt-1 max-h-[140px] w-full overflow-y-auto rounded-xl border shadow-lg ${dark ? 'border-white/10 bg-[#353434]/95' : 'border-white/10 bg-white/95'}`} style={{ backdropFilter: 'blur(12px)' }}>
+                      <div className={`absolute left-0 top-full z-50 mt-1 max-h-[140px] w-full overflow-y-auto rounded-xl border shadow-lg ${dark ? 'border-[#5D5D7A]/30 bg-[#3B3B56]/95' : 'border-white/10 bg-white/95'}`} style={{ backdropFilter: 'blur(12px)' }}>
                         {tagSuggestions.map((lb) => (
                           <button key={lb.text} onClick={() => { addExistingTag(lb); playClick() }}
-                            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-medium transition-all ${dark ? 'text-neutral-300 hover:bg-[#454444]' : 'text-neutral-600 hover:bg-neutral-50'}`}>
+                            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-medium transition-all ${dark ? 'text-[#C8C8DC] hover:bg-[#52526E]' : 'text-neutral-600 hover:bg-neutral-50'}`}>
                             <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: lb.color }} />
                             {lb.text}
                           </button>
@@ -786,7 +786,7 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
             )}
           </AnimatePresence>
         </div>
-        <div className={`flex items-center justify-between border-t p-5 ${dark ? 'border-[#C24C11]/30' : 'border-neutral-100/60'}`}>
+        <div className={`flex items-center justify-between border-t p-5 ${dark ? 'border-[#5D5D7A]/30' : 'border-neutral-100/60'}`}>
           <div>
             {task && (
               <button onClick={() => { onDelete(task.id); onClose(); playClick() }}
@@ -796,7 +796,7 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
             )}
           </div>
           <div className="flex gap-2">
-            <button onClick={() => { onClose(); playClick() }} className={`rounded-xl px-5 py-2.5 text-[13px] font-bold transition-all ${theme.textMuted} ${dark ? 'hover:bg-[#454444]' : 'hover:bg-neutral-100/80'}`}>取消</button>
+            <button onClick={() => { onClose(); playClick() }} className={`rounded-xl px-5 py-2.5 text-[13px] font-bold transition-all ${theme.textMuted} ${dark ? 'hover:bg-[#52526E]' : 'hover:bg-neutral-100/80'}`}>取消</button>
             <button onClick={() => { if (!form.title.trim()) return; onSave(form); onClose(); playClick() }}
               className={`rounded-xl ${theme.btnBg} px-5 py-2.5 text-[13px] font-bold ${theme.btnText} shadow-sm transition-all ${theme.btnHover} active:scale-[0.98]`}>
               {task ? "儲存變更" : "建立任務"}
