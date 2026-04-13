@@ -1,9 +1,9 @@
-import { useState, useEffect, useMemo, useCallback } from "react"
+import { useState, useEffect, useMemo, useCallback, useRef } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import {
   Plus, Search, X, GripVertical, Calendar, BarChart3, LayoutGrid,
   ChevronLeft, ChevronRight, Tag, Clock, AlertCircle, CheckCircle2,
-  Circle, Timer, Sparkles, Filter, Loader2, Cloud, CloudOff, Sun, Moon
+  Circle, Timer, Sparkles, Filter, Loader2, Cloud, CloudOff, Sun, Moon, SlidersHorizontal, Type, Minus
 } from "lucide-react"
 import { supabase } from "./supabaseClient"
 
@@ -15,6 +15,8 @@ function loadAssets() {
     document.head.appendChild(link)
   }
 }
+
+const localDateStr = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 
 function GlassCard({ children, className = "", intensity = "medium", dark = false, ...props }) {
   const bg = dark
@@ -68,6 +70,22 @@ function App() {
   const [dark, setDark] = useState(() => {
     try { return localStorage.getItem("theme-dark") === "true" } catch { return false }
   })
+  const [showSettings, setShowSettings] = useState(false)
+  const settingsRef = useRef(null)
+  useEffect(() => {
+    if (!showSettings) return
+    const handler = (e) => { if (settingsRef.current && !settingsRef.current.contains(e.target)) setShowSettings(false) }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [showSettings])
+  const [textSettings, setTextSettings] = useState(() => {
+    try { return JSON.parse(localStorage.getItem("text-settings")) || { size: 1, spacing: 1 } } catch { return { size: 1, spacing: 1 } }
+  })
+  useEffect(() => { localStorage.setItem("text-settings", JSON.stringify(textSettings)) }, [textSettings])
+  const fontScale = [0.85, 1, 1.15, 1.3]
+  const spacingScale = [0.9, 1, 1.15, 1.3]
+  const fs = fontScale[textSettings.size] ?? 1
+  const ls = spacingScale[textSettings.spacing] ?? 1
 
   const theme = dark
     ? { bg: "#292828", card: "bg-[#353434]/75", cardBorder: "border-[#C24C11]/40", text: "text-neutral-100", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-[#353434]/70", inputBg: "bg-[#3a3939]/60", inputBorder: "border-[#C24C11]/30", pillBg: "bg-[#3a3939]/60", pillActive: "bg-[#454444]", accent: "#F05917", btnBg: "bg-[#F05917]", btnHover: "hover:bg-[#d94e14]", btnText: "text-white" }
@@ -202,6 +220,47 @@ function App() {
               className={`rounded-xl p-2.5 transition-all ${dark ? 'bg-[#454444] text-amber-300 hover:bg-[#505050]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60'}`}>
               {dark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
+            <div className="relative" ref={settingsRef}>
+              <button onClick={() => setShowSettings(!showSettings)}
+                className={`rounded-xl p-2.5 transition-all ${showSettings ? (dark ? 'bg-[#F05917] text-white' : 'bg-[#F05917] text-white') : (dark ? 'bg-[#454444] text-neutral-300 hover:bg-[#505050]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60')}`}>
+                <Type size={16} />
+              </button>
+              {showSettings && (
+                <div className={`absolute right-0 top-full mt-2 w-56 rounded-2xl border p-4 shadow-xl backdrop-blur-2xl z-50 ${dark ? 'border-[#C24C11]/30 bg-[#353434]/95' : 'border-neutral-200/50 bg-white/95'}`}>
+                  <div className={`mb-3 text-[11px] font-bold uppercase tracking-widest ${theme.textSub}`}>文字設定</div>
+                  <div className="space-y-3">
+                    <div>
+                      <div className={`mb-1.5 flex items-center justify-between text-[12px] font-medium ${theme.textSub}`}>
+                        <span>字體大小</span>
+                        <span className={`text-[11px] ${theme.textMuted}`}>{['小', '中', '大', '特大'][textSettings.size]}</span>
+                      </div>
+                      <div className="flex gap-1">
+                        {[0,1,2,3].map(i => (
+                          <button key={i} onClick={() => setTextSettings({...textSettings, size: i})}
+                            className={`flex-1 rounded-lg py-1.5 text-[11px] font-bold transition-all ${textSettings.size === i ? `${theme.btnBg} ${theme.btnText}` : `${dark ? 'bg-[#454444] text-neutral-400' : 'bg-neutral-100 text-neutral-500'} hover:opacity-80`}`}>
+                            {['S','M','L','XL'][i]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <div className={`mb-1.5 flex items-center justify-between text-[12px] font-medium ${theme.textSub}`}>
+                        <span>行間距</span>
+                        <span className={`text-[11px] ${theme.textMuted}`}>{['緊湊', '標準', '寬鬆', '超寬'][textSettings.spacing]}</span>
+                      </div>
+                      <div className="flex gap-1">
+                        {[0,1,2,3].map(i => (
+                          <button key={i} onClick={() => setTextSettings({...textSettings, spacing: i})}
+                            className={`flex-1 rounded-lg py-1.5 text-[11px] font-bold transition-all ${textSettings.spacing === i ? `${theme.btnBg} ${theme.btnText}` : `${dark ? 'bg-[#454444] text-neutral-400' : 'bg-neutral-100 text-neutral-500'} hover:opacity-80`}`}>
+                            {['1','2','3','4'][i]}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
             <button onClick={openNew}
               className={`flex items-center gap-1.5 rounded-xl ${theme.btnBg} px-5 py-2.5 text-[13px] font-bold ${theme.btnText} shadow-sm transition-all ${theme.btnHover} active:scale-[0.98]`}>
               <Plus size={16} />新增任務
@@ -253,9 +312,9 @@ function App() {
 
         <main className="min-w-0 flex-1">
           <AnimatePresence mode="wait">
-            {view === "board" && <BoardView key="board" tasks={filtered} columns={COLUMNS} onEdit={openEdit} onDrop={handleDrop} dragItem={dragItem} setDragItem={setDragItem} dark={dark} theme={theme} />}
-            {view === "calendar" && <CalendarView key="calendar" tasks={filtered} onEdit={openEdit} dark={dark} theme={theme} />}
-            {view === "gantt" && <GanttView key="gantt" tasks={filtered} onEdit={openEdit} dark={dark} theme={theme} />}
+            {view === "board" && <BoardView key="board" tasks={filtered} columns={COLUMNS} onEdit={openEdit} onDrop={handleDrop} dragItem={dragItem} setDragItem={setDragItem} dark={dark} theme={theme} fs={fs} ls={ls} />}
+            {view === "calendar" && <CalendarView key="calendar" tasks={filtered} onEdit={openEdit} dark={dark} theme={theme} fs={fs} ls={ls} />}
+            {view === "gantt" && <GanttView key="gantt" tasks={filtered} onEdit={openEdit} dark={dark} theme={theme} fs={fs} ls={ls} />}
           </AnimatePresence>
         </main>
       </div>
@@ -269,7 +328,7 @@ function App() {
   )
 }
 
-function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark, theme }) {
+function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark, theme, fs, ls }) {
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {columns.map((col) => {
@@ -282,8 +341,8 @@ function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark
             className="rounded-2xl transition-all">
             <div className="mb-3 flex items-center gap-2 px-1">
               <col.icon size={15} style={{ color: col.accent }} />
-              <span className={`text-[13px] font-bold ${theme.text}`}>{col.label}</span>
-              <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold shadow-sm ${dark ? 'bg-[#454444] text-neutral-400' : 'bg-white/80 text-neutral-400'}`}>{colTasks.length}</span>
+              <span className={`text-[13px] font-bold ${theme.text}`} style={{ fontSize: `${14 * fs}px` }}>{col.label}</span>
+              <span className={`rounded-full px-2 py-0.5 text-[11px] font-bold shadow-sm ${dark ? 'bg-[#454444] text-neutral-400' : 'bg-white/80 text-neutral-400'}`} style={{ fontSize: `${11 * fs}px` }}>{colTasks.length}</span>
             </div>
             <div className="space-y-2.5">
               {colTasks.map((task) => (
@@ -291,15 +350,15 @@ function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark
                   draggable onDragStart={() => setDragItem(task.id)} onDragEnd={() => setDragItem(null)}
                   whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400, damping: 30 }}>
                   <GlassCard className="cursor-pointer p-4 transition-all hover:shadow-md" dark={dark} onClick={() => onEdit(task)}>
-                    <div className="mb-2 flex items-start justify-between">
-                      <h4 className={`text-[13px] font-bold leading-snug ${theme.text}`}>{task.title}</h4>
+                    <div className="mb-2 flex items-start justify-between" style={{ marginBottom: `${8 * ls}px` }}>
+                      <h4 className={`font-bold leading-snug ${theme.text}`} style={{ fontSize: `${14 * fs}px`, lineHeight: `${1.4 * ls}` }}>{task.title}</h4>
                       <GripVertical size={14} className={theme.textMuted} />
                     </div>
-                    {task.description && <p className={`mb-3 text-[11px] leading-relaxed ${theme.textSub}`}>{task.description}</p>}
+                    {task.description && <p className={`leading-relaxed ${theme.textSub}`} style={{ fontSize: `${12 * fs}px`, lineHeight: `${1.5 * ls}`, marginBottom: `${12 * ls}px` }}>{task.description}</p>}
                     <div className="flex items-center justify-between">
                       <div className="flex gap-1">
                         {task.tags.slice(0, 2).map((tag) => (
-                          <span key={tag} className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${dark ? 'bg-[#3a2820] text-amber-300/80' : 'bg-neutral-100/70 text-neutral-500'}`}>{tag}</span>
+                          <span key={tag} className={`rounded-full px-2 py-0.5 font-medium ${dark ? 'bg-[#3a2820] text-amber-300/80' : 'bg-neutral-100/70 text-neutral-500'}`} style={{ fontSize: `${11 * fs}px` }}>{tag}</span>
                         ))}
                       </div>
                       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: PRIORITIES.find((p) => p.id === task.priority)?.color }} />
@@ -320,7 +379,7 @@ function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark
   )
 }
 
-function CalendarView({ tasks, onEdit, dark, theme }) {
+function CalendarView({ tasks, onEdit, dark, theme, fs, ls }) {
   const [curr, setCurr] = useState(new Date())
   const days = useMemo(() => {
     const year = curr.getFullYear()
@@ -332,7 +391,7 @@ function CalendarView({ tasks, onEdit, dark, theme }) {
     for (let i = firstDay - 1; i >= 0; i--) result.push({ day: prevMonthDays - i, type: "prev", date: null })
     for (let i = 1; i <= daysInMonth; i++) {
       const date = new Date(year, month, i)
-      result.push({ day: i, type: "current", date: date.toISOString().split("T")[0], isToday: date.toDateString() === new Date().toDateString() })
+      result.push({ day: i, type: "current", date: localDateStr(date), isToday: date.toDateString() === new Date().toDateString() })
     }
     const remaining = 42 - result.length
     for (let i = 1; i <= remaining; i++) result.push({ day: i, type: "next", date: null })
@@ -343,7 +402,7 @@ function CalendarView({ tasks, onEdit, dark, theme }) {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="mx-auto max-w-5xl">
       <GlassCard className="overflow-hidden" intensity="heavy" dark={dark}>
         <div className="flex items-center justify-between p-5">
-          <h2 className={`text-lg font-black ${theme.text}`} style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }}>
+          <h2 className={`text-lg font-black ${theme.text}`} style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em', fontSize: `${18 * fs}px` }}>
             {curr.toLocaleDateString("zh-TW", { year: "numeric", month: "long" })}
           </h2>
           <div className={`flex items-center gap-1 rounded-lg p-0.5 ${theme.pillBg}`}>
@@ -351,7 +410,7 @@ function CalendarView({ tasks, onEdit, dark, theme }) {
               onClick={() => { const d = new Date(curr); d.setMonth(d.getMonth() - 1); setCurr(d) }}>
               <ChevronLeft size={16} className={theme.textSub} />
             </button>
-            <button onClick={() => setCurr(new Date())} className={`px-2.5 py-1 text-[12px] font-semibold ${theme.textSub} hover:${theme.text}`}>今天</button>
+            <button onClick={() => setCurr(new Date())} className={`px-2.5 py-1 font-semibold ${theme.textSub} hover:${theme.text}`} style={{ fontSize: `${12 * fs}px` }}>今天</button>
             <button className={`rounded-md p-1.5 transition-all ${dark ? 'hover:bg-[#454444]' : 'hover:bg-white'}`}
               onClick={() => { const d = new Date(curr); d.setMonth(d.getMonth() + 1); setCurr(d) }}>
               <ChevronRight size={16} className={theme.textSub} />
@@ -360,7 +419,7 @@ function CalendarView({ tasks, onEdit, dark, theme }) {
         </div>
         <div className={`grid grid-cols-7 border-t py-2.5 ${dark ? 'border-[#C24C11]/30' : 'border-neutral-100/60'}`}>
           {weekDays.map((d) => (
-            <div key={d} className={`text-center text-[11px] font-bold ${theme.textSub}`}>{d}</div>
+            <div key={d} className={`text-center font-bold ${theme.textSub}`} style={{ fontSize: `${11 * fs}px` }}>{d}</div>
           ))}
         </div>
         <div className="grid grid-cols-7">
@@ -368,16 +427,16 @@ function CalendarView({ tasks, onEdit, dark, theme }) {
             const dayTasks = d.date ? tasks.filter((t) => d.date >= t.startDate && d.date <= t.endDate) : []
             return (
               <div key={i} className={`min-h-[100px] border-t p-2 transition-colors ${dark ? 'border-[#C24C11]/20 hover:bg-[#3a3939]/40' : 'border-neutral-100/40 hover:bg-white/40'} ${d.type !== "current" ? "opacity-30" : ""}`}>
-                <span className={`mb-1 inline-flex h-6 w-6 items-center justify-center text-[12px] font-semibold ${d.isToday ? "rounded-full bg-[#F05917] text-white" : theme.text}`}>{d.day}</span>
+                <span className={`mb-1 inline-flex h-6 w-6 items-center justify-center font-semibold ${d.isToday ? "rounded-full bg-[#F05917] text-white" : theme.text}`} style={{ fontSize: `${12 * fs}px` }}>{d.day}</span>
                 <div className="space-y-0.5">
                   {dayTasks.slice(0, 3).map((t) => (
                     <div key={t.id} onClick={() => onEdit(t)}
-                      className="cursor-pointer truncate rounded-md px-1.5 py-0.5 text-[10px] font-medium transition-all hover:brightness-95"
-                      style={{ backgroundColor: `${t.color}15`, borderLeft: `2px solid ${t.color}`, color: dark ? '#a3a3a3' : '#404040' }}>
+                      className="cursor-pointer truncate rounded-md px-1.5 py-0.5 font-medium transition-all hover:brightness-95"
+                      style={{ backgroundColor: `${t.color}15`, borderLeft: `2px solid ${t.color}`, color: dark ? '#a3a3a3' : '#404040', fontSize: `${10 * fs}px` }}>
                       {t.title}
                     </div>
                   ))}
-                  {dayTasks.length > 3 && <div className={`text-center text-[9px] font-medium ${theme.textSub}`}>+{dayTasks.length - 3}</div>}
+                  {dayTasks.length > 3 && <div className={`text-center font-medium ${theme.textSub}`} style={{ fontSize: `${9 * fs}px` }}>+{dayTasks.length - 3}</div>}
                 </div>
               </div>
             )
@@ -388,7 +447,7 @@ function CalendarView({ tasks, onEdit, dark, theme }) {
   )
 }
 
-function GanttView({ tasks, onEdit, dark, theme }) {
+function GanttView({ tasks, onEdit, dark, theme, fs, ls }) {
   const [rangeDays, setRangeDays] = useState(21)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -412,11 +471,12 @@ function GanttView({ tasks, onEdit, dark, theme }) {
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
       <GlassCard className="overflow-hidden" intensity="heavy" dark={dark}>
         <div className="flex items-center justify-between p-5">
-          <h2 className={`text-lg font-black ${theme.text}`} style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }}>甘特圖</h2>
+          <h2 className={`text-lg font-black ${theme.text}`} style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em', fontSize: `${18 * fs}px` }}>甘特圖</h2>
           <div className={`flex items-center gap-1 rounded-lg p-0.5 ${theme.pillBg}`}>
             {[7, 14, 21, 30].map((d) => (
               <button key={d} onClick={() => setRangeDays(d)}
-                className={`rounded-md px-2.5 py-1 text-[12px] font-semibold transition-all ${rangeDays === d ? `${theme.pillActive} ${theme.text} shadow-sm` : `${theme.textMuted} hover:${theme.text}`}`}>
+                className={`rounded-md px-2.5 py-1 font-semibold transition-all ${rangeDays === d ? `${theme.pillActive} ${theme.text} shadow-sm` : `${theme.textMuted} hover:${theme.text}`}`}
+                style={{ fontSize: `${12 * fs}px` }}>
                 {d}天
               </button>
             ))}
@@ -426,7 +486,7 @@ function GanttView({ tasks, onEdit, dark, theme }) {
           <div className={`flex border-b ${dark ? 'border-[#C24C11]/20' : 'border-neutral-100/40'}`}>
             {dateRange.map((d, i) => (
               <div key={i} className="flex-1 py-2 text-center" style={{ minWidth: 0 }}>
-                <div className={`text-[10px] font-bold ${d.toDateString() === today.toDateString() ? theme.text : theme.textSub}`}>
+                <div className={`font-bold ${d.toDateString() === today.toDateString() ? theme.text : theme.textSub}`} style={{ fontSize: `${10 * fs}px` }}>
                   {d.getDate()}
                 </div>
               </div>
@@ -441,13 +501,13 @@ function GanttView({ tasks, onEdit, dark, theme }) {
               if (!style) return null
               return (
                 <div key={task.id} className={`group flex items-center gap-3 border-b px-4 py-2.5 ${dark ? 'border-[#C24C11]/20' : 'border-neutral-50/40'}`}>
-                  <div className={`w-[140px] shrink-0 truncate text-[12px] font-medium ${theme.textSub}`}>{task.title}</div>
+                  <div className={`w-[140px] shrink-0 truncate font-medium ${theme.textSub}`} style={{ fontSize: `${12 * fs}px` }}>{task.title}</div>
                   <div className="relative h-7 flex-1">
                     <motion.div initial={{ scaleX: 0, opacity: 0 }} animate={{ scaleX: 1, opacity: 1 }}
                       transition={{ type: "spring", stiffness: 200, damping: 25 }}
                       onClick={() => onEdit(task)} className="absolute top-0 h-full cursor-pointer rounded-md transition-all group-hover:brightness-95"
                       style={{ left: style.left, width: style.width, originX: 0, backgroundColor: `${task.color}15`, borderLeft: `3px solid ${task.color}` }}>
-                      <span className={`absolute inset-0 flex items-center truncate px-2 text-[10px] font-medium ${theme.textSub}`}>{task.title}</span>
+                      <span className={`absolute inset-0 flex items-center truncate px-2 font-medium ${theme.textSub}`} style={{ fontSize: `${10 * fs}px` }}>{task.title}</span>
                     </motion.div>
                   </div>
                 </div>
@@ -471,8 +531,8 @@ function GanttView({ tasks, onEdit, dark, theme }) {
 function TaskModal({ task, onSave, onDelete, onClose, dark, theme }) {
   const [form, setForm] = useState(task ? { ...task } : {
     title: "", description: "", column: "todo", priority: "medium",
-    startDate: new Date().toISOString().split("T")[0],
-    endDate: new Date(Date.now() + 7 * 86400000).toISOString().split("T")[0],
+    startDate: localDateStr(new Date()),
+    endDate: localDateStr(new Date(Date.now() + 7 * 86400000)),
     tags: [], color: MORANDI_COLORS[0]
   })
   const [tab, setTab] = useState("basic")
