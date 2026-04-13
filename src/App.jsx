@@ -24,7 +24,7 @@ function GlassCard({ children, className = "", intensity = "medium", dark = fals
     : (intensity === "heavy" ? "bg-white/75 backdrop-blur-2xl backdrop-saturate-[180%]" : intensity === "light" ? "bg-white/50 backdrop-blur-lg backdrop-saturate-150" : "bg-white/65 backdrop-blur-xl backdrop-saturate-[180%]")
   const border = dark ? "border-transparent" : "border-neutral-200/40"
   return (
-    <div className={`rounded-2xl border shadow-sm ${border} ${bg} ${className}`} style={{ WebkitBackdropFilter: 'blur(16px) saturate(180%)' }} {...props}>
+    <div className={`rounded-2xl border shadow-sm ${border} ${bg} ${className}`} style={{ WebkitBackdropFilter: 'blur(16px) saturate(180%)', willChange: 'transform', contain: 'layout style paint' }} {...props}>
       {children}
     </div>
   )
@@ -193,11 +193,11 @@ function App() {
     <div className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ fontFamily: "'Inter', 'Noto Serif TC', sans-serif", background: dark ? '#292828' : '#DED5CC' }}>
       {/* Subtle blobs for glassmorphism depth */}
       <div className="pointer-events-none fixed inset-0 z-0">
-        <div className={`absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full blur-3xl ${dark ? 'bg-neutral-700/20' : 'bg-neutral-300/25'}`} />
-        <div className={`absolute top-1/3 right-0 h-96 w-96 rounded-full blur-3xl ${dark ? 'bg-neutral-600/15' : 'bg-neutral-200/30'}`} />
-        <div className={`absolute bottom-0 left-1/3 h-80 w-80 rounded-full blur-3xl ${dark ? 'bg-[#F05917]/8' : 'bg-[#F05917]/5'}`} />
+        <div className={`absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full blur-2xl ${dark ? 'bg-neutral-700/20' : 'bg-neutral-300/25'}`} />
+        <div className={`absolute top-1/3 right-0 h-96 w-96 rounded-full blur-2xl ${dark ? 'bg-neutral-600/15' : 'bg-neutral-200/30'}`} />
+        <div className={`absolute bottom-0 left-1/3 h-80 w-80 rounded-full blur-2xl ${dark ? 'bg-[#F05917]/8' : 'bg-[#F05917]/5'}`} />
       </div>
-      <nav className={`sticky top-0 z-40 border-b backdrop-blur-2xl backdrop-saturate-[180%] transition-colors duration-300 ${dark ? 'border-[#C24C11]/40 bg-[#353434]/70' : 'border-neutral-200/50 bg-white/70'}`} style={{ WebkitBackdropFilter: 'blur(16px) saturate(180%)' }}>
+      <nav className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-300 ${dark ? 'border-[#C24C11]/40 bg-[#353434]/80' : 'border-neutral-200/50 bg-white/80'}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-4">
           <div className="flex items-center gap-4">
             <h1 className={`text-3xl font-black tracking-tight`} style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.04em' }}>
@@ -226,7 +226,7 @@ function App() {
                 <Type size={16} />
               </button>
               {showSettings && (
-                <div className={`absolute right-0 top-full mt-2 w-56 rounded-2xl border p-4 shadow-xl backdrop-blur-2xl z-50 ${dark ? 'border-[#C24C11]/30 bg-[#353434]/95' : 'border-neutral-200/50 bg-white/95'}`}>
+                <div className={`absolute right-0 top-full mt-2 w-56 rounded-2xl border p-4 shadow-xl z-50 ${dark ? 'border-[#C24C11]/30 bg-[#353434]/98' : 'border-neutral-200/50 bg-white/98'}`}>
                   <div className={`mb-3 text-[11px] font-bold uppercase tracking-widest ${theme.textSub}`}>文字設定</div>
                   <div className="space-y-3">
                     <div>
@@ -274,7 +274,7 @@ function App() {
           <GlassCard className="p-5" intensity="light" dark={dark}>
             <div className="relative mb-5">
               <Search size={15} className={`absolute left-3 top-1/2 -translate-y-1/2 ${theme.textMuted}`} />
-              <input className={`w-full rounded-xl border ${theme.inputBorder} ${theme.inputBg} py-2.5 pl-9 pr-3 text-sm ${theme.text} placeholder-neutral-400 backdrop-blur-sm transition-all focus:outline-none`}
+              <input className={`w-full rounded-xl border ${theme.inputBorder} ${theme.inputBg} py-2.5 pl-9 pr-3 text-sm ${theme.text} placeholder-neutral-400 transition-all focus:outline-none`}
                 placeholder="搜尋任務..." value={search} onChange={(e) => setSearch(e.target.value)} />
             </div>
             <div className="mb-5">
@@ -346,9 +346,9 @@ function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark
             </div>
             <div className="space-y-2.5">
               {colTasks.map((task) => (
-                <motion.div key={task.id} layout layoutId={task.id}
+                <motion.div key={task.id} layout="position" layoutId={task.id}
                   draggable onDragStart={() => setDragItem(task.id)} onDragEnd={() => setDragItem(null)}
-                  whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 400, damping: 30 }}>
+                  whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 300, damping: 25 }}>
                   <GlassCard className="cursor-pointer p-4 transition-all hover:shadow-md" dark={dark} onClick={() => onEdit(task)}>
                     <div className="mb-2 flex items-start justify-between" style={{ marginBottom: `${8 * ls}px` }}>
                       <h4 className={`font-bold leading-snug ${theme.text}`} style={{ fontSize: `${14 * fs}px`, lineHeight: `${1.4 * ls}` }}>{task.title}</h4>
@@ -539,7 +539,7 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme }) {
   const [tagInput, setTagInput] = useState("")
   const addTag = () => { if (tagInput.trim() && !form.tags.includes(tagInput.trim())) { setForm({ ...form, tags: [...form.tags, tagInput.trim()] }); setTagInput("") } }
   const removeTag = (t) => setForm({ ...form, tags: form.tags.filter((x) => x !== t) })
-  const inputClass = `w-full rounded-xl border ${dark ? 'border-[#C24C11]/30 bg-[#3a3939]/60 text-neutral-100' : 'border-neutral-200/60 bg-white/60 text-neutral-800'} px-3 py-2.5 text-sm backdrop-blur-sm transition-all focus:outline-none focus:ring-2 ${dark ? 'focus:ring-[#F05917]/30' : 'focus:ring-neutral-200/50'}`
+  const inputClass = `w-full rounded-xl border ${dark ? 'border-[#C24C11]/30 bg-[#3a3939]/60 text-neutral-100' : 'border-neutral-200/60 bg-white/60 text-neutral-800'} px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${dark ? 'focus:ring-[#F05917]/30' : 'focus:ring-neutral-200/50'}`
   const labelClass = `mb-1.5 block text-[12px] font-bold uppercase tracking-widest ${theme.textSub}`
   const tabs = [
     { id: "basic", label: "基本" },
@@ -551,9 +551,9 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme }) {
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       transition={{ duration: 0.15 }}
       style={{ willChange: 'opacity' }}>
-      <div className={`absolute inset-0 backdrop-blur-sm ${dark ? 'bg-black/30' : 'bg-black/15'}`} onClick={onClose} style={{ WebkitBackdropFilter: 'blur(4px)' }} />
-      <motion.div className={`relative w-full max-w-lg rounded-3xl border shadow-2xl backdrop-blur-2xl backdrop-saturate-[180%] ${dark ? 'border-[#C24C11]/40 bg-[#353434]/90' : 'border-neutral-200/50 bg-white/85'}`}
-        style={{ willChange: 'transform, opacity', WebkitBackdropFilter: 'blur(40px) saturate(180%)' }}
+      <div className={`absolute inset-0 ${dark ? 'bg-black/30' : 'bg-black/15'}`} onClick={onClose} />
+      <motion.div className={`relative w-full max-w-lg rounded-3xl border shadow-2xl ${dark ? 'border-[#C24C11]/40 bg-[#353434]/95' : 'border-neutral-200/50 bg-white/90'}`}
+        style={{ willChange: 'transform, opacity' }}
         initial={{ scale: 0.92, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.92, opacity: 0, y: 20 }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}>
         <div className={`flex items-center justify-between border-b p-5 ${dark ? 'border-[#C24C11]/30' : 'border-neutral-100/60'}`}>
