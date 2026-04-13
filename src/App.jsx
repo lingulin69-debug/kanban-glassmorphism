@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from "framer-motion"
 import {
   Plus, Search, X, GripVertical, Calendar, BarChart3, LayoutGrid,
   ChevronLeft, ChevronRight, Tag, Clock, AlertCircle, CheckCircle2,
-  Circle, Timer, Sparkles, Filter, Loader2, Cloud, CloudOff, Sun, Moon, SlidersHorizontal, Type, Minus
+  Circle, Timer, Sparkles, Filter, Loader2, Cloud, CloudOff, Sun, Moon, SlidersHorizontal, Type, Minus,
+  ChevronDown, ArrowUpDown, Lightbulb
 } from "lucide-react"
 import { supabase } from "./supabaseClient"
 
@@ -181,13 +182,19 @@ function App() {
   useEffect(() => { if (tasks.length > 0) localStorage.setItem("sketch-board-tasks", JSON.stringify(tasks)) }, [tasks])
 
   const [filterLabel, setFilterLabel] = useState(null)
+  const [showInspiration, setShowInspiration] = useState(() => {
+    try { return localStorage.getItem("show-inspiration") !== "false" } catch { return true }
+  })
+  useEffect(() => { localStorage.setItem("show-inspiration", String(showInspiration)) }, [showInspiration])
+  const [boardSort, setBoardSort] = useState("default") // "default" | "newest" | "oldest"
   const filtered = useMemo(() => {
-    let result = tasks
+    let result = tasks.filter(t => t.column !== "inspiration")
     if (search) { const q = search.toLowerCase(); result = result.filter((t) => t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)) }
     if (filterPriority !== "all") result = result.filter((t) => t.priority === filterPriority)
     if (filterLabel) result = result.filter((t) => (t.tags || []).some(tag => migrateTag(tag).text === filterLabel))
     return result
   }, [tasks, search, filterPriority, filterLabel])
+  const inspirationTasks = useMemo(() => tasks.filter(t => t.column === "inspiration"), [tasks])
 
   const handleSave = async (form) => {
     if (editTask) {
@@ -242,14 +249,14 @@ function App() {
   )
 
   return (
-    <div className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ fontFamily: "'DM Sans', 'Noto Sans TC', sans-serif", background: dark ? '#14161F' : '#DBD4B8' }}>
+    <div className="relative min-h-screen overflow-hidden transition-colors duration-150" style={{ fontFamily: "'DM Sans', 'Noto Sans TC', sans-serif", background: dark ? '#14161F' : '#DBD4B8' }}>
       {/* Subtle blobs for glassmorphism depth */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className={`absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full blur-3xl ${dark ? 'bg-white/[0.02]' : 'bg-neutral-200/20'}`} />
         <div className={`absolute top-1/3 right-0 h-96 w-96 rounded-full blur-3xl ${dark ? 'bg-white/[0.015]' : 'bg-neutral-100/25'}`} />
         <div className={`absolute bottom-0 left-1/3 h-80 w-80 rounded-full blur-3xl ${dark ? 'bg-[#EA6B26]/[0.04]' : 'bg-[#E85D3A]/[0.03]'}`} />
       </div>
-      <nav className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-300 ${dark ? 'border-white/[0.06] bg-white/[0.04]' : 'border-neutral-200/40 bg-white/80'}`}>
+      <nav className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-150 ${dark ? 'border-white/[0.06] bg-white/[0.04]' : 'border-neutral-200/40 bg-white/80'}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-4">
           <div className="flex items-center gap-4">
             <h1 className={`text-3xl font-black tracking-tight`} style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: '-0.04em' }}>
@@ -365,12 +372,47 @@ function App() {
                 )
               })}
             </div>
+            {/* 靈感收束區 */}
+            <div className={`mt-4 border-t pt-4 ${dark ? 'border-white/[0.06]' : 'border-neutral-100/60'}`}
+              onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("ring-2", `ring-[${theme.accent}]`) }}
+              onDragLeave={(e) => { e.currentTarget.classList.remove("ring-2", `ring-[${theme.accent}]`) }}
+              onDrop={(e) => { e.preventDefault(); e.currentTarget.classList.remove("ring-2", `ring-[${theme.accent}]`); if (dragItem) { handleDrop(dragItem, "inspiration"); setDragItem(null) } }}>
+              <button onClick={() => { setShowInspiration(!showInspiration); playClick() }}
+                className={`flex w-full items-center justify-between rounded-lg px-2 py-1 text-left transition-all ${dark ? 'hover:bg-white/[0.06]' : 'hover:bg-white/60'}`}>
+                <div className="flex items-center gap-2">
+                  <Lightbulb size={12} style={{ color: '#F2D600' }} />
+                  <span className={`text-[11px] font-bold uppercase tracking-widest ${theme.textSub}`}>靈感</span>
+                  <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${dark ? 'bg-white/[0.08] text-neutral-300' : 'bg-white/80 text-neutral-700'}`}>{inspirationTasks.length}</span>
+                </div>
+                <ChevronDown size={12} className={`${theme.textMuted} transition-transform ${showInspiration ? '' : '-rotate-90'}`} />
+              </button>
+              {showInspiration && (
+                <div className="mt-2 space-y-1">
+                  {inspirationTasks.length === 0 && (
+                    <div className={`rounded-lg border border-dashed p-3 text-center text-[11px] ${dark ? 'border-white/[0.08]' : 'border-neutral-200/50'} ${theme.textMuted}`}>
+                      拖曳任務到這裡收藏靈感
+                    </div>
+                  )}
+                  {inspirationTasks.map((t) => (
+                    <div key={t.id} draggable
+                      onDragStart={() => setDragItem(t.id)} onDragEnd={() => setDragItem(null)}
+                      onClick={() => { openEdit(t); playClick() }}
+                      className={`cursor-pointer rounded-lg px-3 py-2 text-[12px] font-medium transition-all ${dark ? 'bg-white/[0.04] text-neutral-300 hover:bg-white/[0.08]' : 'bg-white/50 text-neutral-600 hover:bg-white/70'}`}>
+                      <div className="flex items-center gap-2">
+                        <Lightbulb size={12} style={{ color: '#F2D600' }} />
+                        <span className="truncate">{t.title}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </GlassCard>
         </aside>
 
         <main className="min-w-0 flex-1">
-          <AnimatePresence mode="wait">
-            {view === "board" && <BoardView key="board" tasks={filtered} columns={COLUMNS} onEdit={openEdit} onDrop={handleDrop} dragItem={dragItem} setDragItem={setDragItem} dark={dark} theme={theme} fs={fs} ls={ls} />}
+          <AnimatePresence mode="popLayout">
+            {view === "board" && <BoardView key="board" tasks={filtered} columns={COLUMNS} onEdit={openEdit} onDrop={handleDrop} dragItem={dragItem} setDragItem={setDragItem} dark={dark} theme={theme} fs={fs} ls={ls} boardSort={boardSort} setBoardSort={setBoardSort} />}
             {view === "calendar" && <CalendarView key="calendar" tasks={filtered} onEdit={openEdit} dark={dark} theme={theme} fs={fs} ls={ls} />}
             {view === "gantt" && <GanttView key="gantt" tasks={filtered} onEdit={openEdit} onUpdateDates={handleUpdateDates} dark={dark} theme={theme} fs={fs} ls={ls} />}
           </AnimatePresence>
@@ -386,11 +428,24 @@ function App() {
   )
 }
 
-function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark, theme, fs, ls }) {
+function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark, theme, fs, ls, boardSort, setBoardSort }) {
+  const sortTasks = (list) => {
+    if (boardSort === "newest") return [...list].sort((a, b) => new Date(b.startDate || 0) - new Date(a.startDate || 0))
+    if (boardSort === "oldest") return [...list].sort((a, b) => new Date(a.startDate || 0) - new Date(b.startDate || 0))
+    return list
+  }
+  const sortLabel = boardSort === "newest" ? "最新" : boardSort === "oldest" ? "最舊" : "預設"
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+    <div>
+      <div className="mb-4 flex justify-end">
+        <button onClick={() => { setBoardSort(boardSort === "default" ? "newest" : boardSort === "newest" ? "oldest" : "default"); playClick() }}
+          className={`flex items-center gap-1 rounded-lg px-3 py-1 text-[11px] font-bold transition-all ${dark ? 'bg-white/[0.06] text-neutral-400 hover:bg-white/[0.1]' : 'bg-white/60 text-neutral-500 hover:bg-white/80'}`}>
+          <ArrowUpDown size={12} />{sortLabel}
+        </button>
+      </div>
+      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.12 }} className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
       {columns.map((col) => {
-        const colTasks = tasks.filter((t) => t.column === col.id)
+        const colTasks = sortTasks(tasks.filter((t) => t.column === col.id))
         return (
           <div key={col.id}
             onDragOver={(e) => { e.preventDefault(); e.currentTarget.classList.add("ring-2", "ring-[#E85D3A]") }}
@@ -406,7 +461,7 @@ function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark
               {colTasks.map((task) => (
                 <motion.div key={task.id} layout="position" layoutId={task.id}
                   draggable onDragStart={() => setDragItem(task.id)} onDragEnd={() => setDragItem(null)}
-                  whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 300, damping: 25 }}>
+                  whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 500, damping: 30 }}>
                   <GlassCard className={`cursor-pointer p-4 ${dark ? 'hover:shadow-[0_2px_8px_rgba(0,0,0,0.3),0_16px_40px_rgba(0,0,0,0.2)]' : 'hover:shadow-[0_2px_6px_rgba(0,0,0,0.06),0_16px_40px_rgba(0,0,0,0.05)]'}`} dark={dark} onClick={() => { onEdit(task); playClick() }}>
                     <div className="mb-2 flex items-start justify-between" style={{ marginBottom: `${8 * ls}px` }}>
                       <h4 className="font-bold leading-snug" style={{ fontSize: `${17 * fs}px`, lineHeight: `${1.4 * ls}`, color: theme.titleText }}>{task.title}</h4>
@@ -434,6 +489,7 @@ function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark
         )
       })}
     </motion.div>
+    </div>
   )
 }
 
@@ -457,7 +513,7 @@ function CalendarView({ tasks, onEdit, dark, theme, fs, ls }) {
   }, [curr])
   const weekDays = ["日","一","二","三","四","五","六"]
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }} className="mx-auto max-w-5xl">
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.12 }} className="mx-auto max-w-5xl">
       <GlassCard className="overflow-hidden" intensity="heavy" dark={dark}>
         <div className="flex items-center justify-between p-6">
           <h2 className={`text-lg font-bold ${theme.text}`} style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: '-0.02em', fontSize: `${18 * fs}px` }}>
@@ -578,7 +634,7 @@ function GanttView({ tasks, onEdit, onUpdateDates, dark, theme, fs, ls }) {
     document.addEventListener('mouseup', onUp)
   }
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
+    <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.12 }}>
       <GlassCard className="overflow-hidden" intensity="heavy" dark={dark}>
         <div className="flex items-center justify-between p-6">
           <h2 className={`text-lg font-bold ${theme.text}`} style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: '-0.02em', fontSize: `${18 * fs}px` }}>甘特圖</h2>
@@ -619,7 +675,7 @@ function GanttView({ tasks, onEdit, onUpdateDates, dark, theme, fs, ls }) {
                         style={{ left: ghost.left, width: ghost.width, backgroundColor: `${task.color}50`, border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 0 8px rgba(255,255,255,0.08)' }} />
                     )}
                     <motion.div initial={{ scaleX: 0, opacity: 0 }} animate={{ scaleX: 1, opacity: 1 }}
-                      transition={{ type: "spring", stiffness: 200, damping: 25 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 30 }}
                       className={`absolute top-0 h-full rounded-md transition-all group-hover:brightness-95 ${ghost && ghost.id === task.id ? 'opacity-40' : ''}`}
                       style={{ left: style.left, width: style.width, originX: 0, backgroundColor: `${task.color}35`, borderLeft: `3px solid ${task.color}`, cursor: 'grab' }}
                       onMouseDown={(e) => handleBarDrag(e, task, 'move')}>
@@ -679,13 +735,13 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
   return (
     <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-      transition={{ duration: 0.15 }}
+      transition={{ duration: 0.1 }}
       style={{ willChange: 'opacity' }}>
       <div className={`absolute inset-0 ${dark ? 'bg-black/30' : 'bg-black/15'}`} onClick={onClose} />
       <motion.div className={`relative w-full max-w-lg rounded-3xl border shadow-2xl ${dark ? 'border-white/[0.08] bg-[#1E2030]/95' : 'border-neutral-200/40 bg-white/90'}`}
         style={{ willChange: 'transform, opacity' }}
-        initial={{ scale: 0.92, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.92, opacity: 0, y: 20 }}
-        transition={{ type: "spring", stiffness: 300, damping: 30 }}>
+        initial={{ scale: 0.95, opacity: 0, y: 12 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 12 }}
+        transition={{ type: "spring", stiffness: 500, damping: 35 }}>
         <div className={`flex items-center justify-between border-b p-6 ${dark ? 'border-white/[0.06]' : 'border-neutral-100/60'}`}>
           <h3 className={`text-lg font-bold ${theme.text}`} style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: '-0.02em' }}>
             {task ? "編輯任務" : "新增任務"}
@@ -717,10 +773,10 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
                 </div>
                 <div>
                   <label className={labelClass}>狀態</label>
-                  <div className="grid grid-cols-4 gap-2">
-                    {COLUMNS.map((c) => (
+                  <div className="grid grid-cols-5 gap-2">
+                    {[...COLUMNS, { id: "inspiration", label: "靈感" }].map((c) => (
                       <button key={c.id} onClick={() => { setForm({ ...form, column: c.id }); playClick() }}
-                        className={`rounded-xl px-2 py-2 text-[12px] font-bold transition-all ${form.column === c.id ? `${theme.btnBg} text-white shadow-md` : `${dark ? 'bg-white/[0.08] text-neutral-400 hover:bg-white/[0.12]' : 'bg-neutral-50/80 text-neutral-500 hover:bg-neutral-100'}`}`}>
+                        className={`rounded-xl px-2 py-2 text-[12px] font-bold transition-all ${form.column === c.id ? `${c.id === 'inspiration' ? 'bg-[#F2D600] text-neutral-900' : `${theme.btnBg} text-white`} shadow-md` : `${dark ? 'bg-white/[0.08] text-neutral-400 hover:bg-white/[0.12]' : 'bg-neutral-50/80 text-neutral-500 hover:bg-neutral-100'}`}`}>
                         {c.label}
                       </button>
                     ))}
