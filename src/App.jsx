@@ -126,7 +126,7 @@ function App() {
 
   const theme = dark
     ? { bg: "#14161F", card: "bg-white/[0.06]", cardBorder: "border-white/[0.08]", text: "text-neutral-100", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-white/[0.05]", inputBg: "bg-white/[0.08]", inputBorder: "border-white/[0.1]", pillBg: "bg-white/[0.06]", pillActive: "bg-white/[0.12]", accent: "#F4845F", btnBg: "bg-[#F4845F]", btnHover: "hover:bg-[#E07350]", btnText: "text-white", contentText: "#C8C8D0", titleText: "#F4845F" }
-    : { bg: "#FAFAF9", card: "bg-white/70", cardBorder: "border-neutral-200/30", text: "text-neutral-900", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-white/80", inputBg: "bg-white/70", inputBorder: "border-neutral-200/40", pillBg: "bg-neutral-100/50", pillActive: "bg-white", accent: "#E85D3A", btnBg: "bg-[#E85D3A]", btnHover: "hover:bg-[#D04E2E]", btnText: "text-white", contentText: "#3A3A3A", titleText: "#1A1A1A" }
+    : { bg: "#FAFAF9", card: "bg-white/70", cardBorder: "border-neutral-200/30", text: "text-neutral-900", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-[#E0DCCA]/80", inputBg: "bg-white/70", inputBorder: "border-neutral-200/40", pillBg: "bg-[#E0DCCA]/50", pillActive: "bg-[#E0DCCA]/90", accent: "#E85D3A", btnBg: "bg-[#E85D3A]", btnHover: "hover:bg-[#D04E2E]", btnText: "text-white", contentText: "#3A3A3A", titleText: "#1A1A1A" }
 
   useEffect(() => { localStorage.setItem("theme-dark", String(dark)) }, [dark])
 
