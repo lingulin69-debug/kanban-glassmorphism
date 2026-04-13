@@ -31,11 +31,11 @@ function GlassCard({ children, className = "", intensity = "medium", dark = fals
 }
 
 const INITIAL_TASKS = [
-  { id: "1", title: "設計系統規劃", description: "建立完整的設計系統文件與元件庫", column: "doing", priority: "high", startDate: "2025-01-15", endDate: "2025-02-15", tags: ["設計", "系統"], color: "#171717" },
-  { id: "2", title: "前端開發框架", description: "選擇並建立前端開發框架", column: "todo", priority: "medium", startDate: "2025-02-01", endDate: "2025-03-01", tags: ["開發"], color: "#525252" },
-  { id: "3", title: "使用者研究", description: "進行目標用戶的訪談與問卷調查", column: "done", priority: "high", startDate: "2025-01-01", endDate: "2025-01-20", tags: ["研究", "UX"], color: "#404040" },
-  { id: "4", title: "API 架構設計", description: "設計 RESTful API 架構", column: "todo", priority: "low", startDate: "2025-02-15", endDate: "2025-03-10", tags: ["後端"], color: "#737373" },
-  { id: "5", title: "效能優化", description: "Core Web Vitals 優化", column: "review", priority: "medium", startDate: "2025-01-25", endDate: "2025-02-20", tags: ["效能"], color: "#a3a3a3" },
+  { id: "1", title: "設計系統規劃", description: "建立完整的設計系統文件與元件庫", column: "doing", priority: "high", startDate: "2025-01-15", endDate: "2025-02-15", tags: [{text:"設計",color:"#C377E0"},{text:"系統",color:"#0079BF"}], color: "#171717" },
+  { id: "2", title: "前端開發框架", description: "選擇並建立前端開發框架", column: "todo", priority: "medium", startDate: "2025-02-01", endDate: "2025-03-01", tags: [{text:"開發",color:"#61BD4F"}], color: "#525252" },
+  { id: "3", title: "使用者研究", description: "進行目標用戶的訪談與問卷調查", column: "done", priority: "high", startDate: "2025-01-01", endDate: "2025-01-20", tags: [{text:"研究",color:"#FF9F1A"},{text:"UX",color:"#FF78CB"}], color: "#404040" },
+  { id: "4", title: "API 架構設計", description: "設計 RESTful API 架構", column: "todo", priority: "low", startDate: "2025-02-15", endDate: "2025-03-10", tags: [{text:"後端",color:"#00C2E0"}], color: "#737373" },
+  { id: "5", title: "效能優化", description: "Core Web Vitals 優化", column: "review", priority: "medium", startDate: "2025-01-25", endDate: "2025-02-20", tags: [{text:"效能",color:"#F2D600"}], color: "#a3a3a3" },
 ]
 
 const COLUMNS = [
@@ -53,9 +53,23 @@ const PRIORITIES = [
   { id: "low", label: "低", color: "#E5A100" },
 ]
 
+const TAG_COLORS = [
+  { id: "green", color: "#61BD4F", light: "#61BD4F20" },
+  { id: "yellow", color: "#F2D600", light: "#F2D60020" },
+  { id: "orange", color: "#FF9F1A", light: "#FF9F1A20" },
+  { id: "red", color: "#EB5A46", light: "#EB5A4620" },
+  { id: "purple", color: "#C377E0", light: "#C377E020" },
+  { id: "blue", color: "#0079BF", light: "#0079BF20" },
+  { id: "sky", color: "#00C2E0", light: "#00C2E020" },
+  { id: "lime", color: "#51E898", light: "#51E89820" },
+  { id: "pink", color: "#FF78CB", light: "#FF78CB20" },
+  { id: "grey", color: "#838C91", light: "#838C9120" },
+]
+
 // DB helper: convert between app camelCase and DB snake_case
-const toDb = (t) => ({ id: t.id, title: t.title, description: t.description, column: t.column, priority: t.priority, start_date: t.startDate || null, end_date: t.endDate || null, tags: t.tags || [], color: t.color || '#8B9DAF' })
-const fromDb = (r) => ({ id: r.id, title: r.title, description: r.description || '', column: r.column, priority: r.priority, startDate: r.start_date || '', endDate: r.end_date || '', tags: r.tags || [], color: r.color || '#8B9DAF' })
+const migrateTag = (t) => typeof t === 'string' ? { text: t, color: TAG_COLORS[0].color } : t
+const toDb = (t) => ({ id: t.id, title: t.title, description: t.description, column: t.column, priority: t.priority, start_date: t.startDate || null, end_date: t.endDate || null, tags: (t.tags || []).map(migrateTag), color: t.color || '#8B9DAF' })
+const fromDb = (r) => ({ id: r.id, title: r.title, description: r.description || '', column: r.column, priority: r.priority, startDate: r.start_date || '', endDate: r.end_date || '', tags: (r.tags || []).map(migrateTag), color: r.color || '#8B9DAF' })
 
 function App() {
   const [tasks, setTasks] = useState([])
@@ -358,7 +372,7 @@ function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark
                     <div className="flex items-center justify-between">
                       <div className="flex gap-1">
                         {task.tags.slice(0, 2).map((tag) => (
-                          <span key={tag} className={`rounded-full px-2 py-0.5 font-medium ${dark ? 'bg-[#3a2820] text-amber-300/80' : 'bg-neutral-100/70 text-neutral-500'}`} style={{ fontSize: `${11 * fs}px` }}>{tag}</span>
+                          <span key={tag.text} className="rounded-full px-2 py-0.5 font-medium" style={{ fontSize: `${11 * fs}px`, backgroundColor: `${tag.color}20`, color: tag.color }}>{tag.text}</span>
                         ))}
                       </div>
                       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: PRIORITIES.find((p) => p.id === task.priority)?.color }} />
@@ -529,7 +543,7 @@ function GanttView({ tasks, onEdit, dark, theme, fs, ls }) {
 }
 
 function TaskModal({ task, onSave, onDelete, onClose, dark, theme }) {
-  const [form, setForm] = useState(task ? { ...task } : {
+  const [form, setForm] = useState(task ? { ...task, tags: (task.tags || []).map(migrateTag) } : {
     title: "", description: "", column: "todo", priority: "medium",
     startDate: localDateStr(new Date()),
     endDate: localDateStr(new Date(Date.now() + 7 * 86400000)),
@@ -537,8 +551,9 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme }) {
   })
   const [tab, setTab] = useState("basic")
   const [tagInput, setTagInput] = useState("")
-  const addTag = () => { if (tagInput.trim() && !form.tags.includes(tagInput.trim())) { setForm({ ...form, tags: [...form.tags, tagInput.trim()] }); setTagInput("") } }
-  const removeTag = (t) => setForm({ ...form, tags: form.tags.filter((x) => x !== t) })
+  const [selectedTagColor, setSelectedTagColor] = useState(TAG_COLORS[0].color)
+  const addTag = () => { if (tagInput.trim() && !form.tags.find(t => t.text === tagInput.trim())) { setForm({ ...form, tags: [...form.tags, { text: tagInput.trim(), color: selectedTagColor }] }); setTagInput("") } }
+  const removeTag = (text) => setForm({ ...form, tags: form.tags.filter((x) => x.text !== text) })
   const inputClass = `w-full rounded-xl border ${dark ? 'border-[#C24C11]/30 bg-[#3a3939]/60 text-neutral-100' : 'border-neutral-200/60 bg-white/60 text-neutral-800'} px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${dark ? 'focus:ring-[#F05917]/30' : 'focus:ring-neutral-200/50'}`
   const labelClass = `mb-1.5 block text-[12px] font-bold uppercase tracking-widest ${theme.textSub}`
   const tabs = [
@@ -636,16 +651,24 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme }) {
                 </div>
                 <div>
                   <label className={labelClass}>標籤</label>
+                  <div className="mb-2 flex flex-wrap gap-1.5">
+                    {TAG_COLORS.map((tc) => (
+                      <button key={tc.id} onClick={() => setSelectedTagColor(tc.color)}
+                        className={`h-6 w-6 rounded-full transition-all ${selectedTagColor === tc.color ? 'ring-2 ring-offset-1 scale-110' : 'hover:scale-105'}`}
+                        style={{ backgroundColor: tc.color, ringColor: tc.color }} />
+                    ))}
+                  </div>
                   <div className="flex gap-2">
                     <input className={`${inputClass} flex-1`} value={tagInput} onChange={(e) => setTagInput(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())} placeholder="輸入標籤..." />
-                    <button onClick={addTag} className={`rounded-xl ${theme.btnBg} px-4 text-[12px] font-bold ${theme.btnText} transition-all ${theme.btnHover}`}>加入</button>
+                    <button onClick={addTag} className={`rounded-xl px-4 text-[12px] font-bold text-white transition-all hover:brightness-90`} style={{ backgroundColor: selectedTagColor }}>加入</button>
                   </div>
                   {form.tags.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
                       {form.tags.map((t) => (
-                        <span key={t} className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium ${dark ? 'bg-[#3a2820] text-amber-300/80' : 'bg-neutral-100/80 text-neutral-600'}`}>
-                          {t}<button onClick={() => removeTag(t)} className="text-neutral-400 hover:text-neutral-600"><X size={12} /></button>
+                        <span key={t.text} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium"
+                          style={{ backgroundColor: `${t.color}20`, color: t.color }}>
+                          {t.text}<button onClick={() => removeTag(t.text)} className="opacity-60 hover:opacity-100"><X size={12} /></button>
                         </span>
                       ))}
                     </div>
