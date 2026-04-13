@@ -125,8 +125,8 @@ function App() {
   const ls = spacingScale[textSettings.spacing] ?? 1
 
   const theme = dark
-    ? { bg: "#14161F", card: "bg-white/[0.06]", cardBorder: "border-white/[0.08]", text: "text-neutral-100", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-white/[0.05]", inputBg: "bg-white/[0.08]", inputBorder: "border-white/[0.1]", pillBg: "bg-white/[0.06]", pillActive: "bg-white/[0.12]", accent: "#F4845F", btnBg: "bg-[#F4845F]", btnHover: "hover:bg-[#E07350]", btnText: "text-white", contentText: "#C8C8D0", titleText: "#F4845F" }
-    : { bg: "#DBD4B8", card: "bg-white/70", cardBorder: "border-neutral-200/30", text: "text-neutral-900", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-[#E0DCCA]/80", inputBg: "bg-white/70", inputBorder: "border-neutral-200/40", pillBg: "bg-[#E0DCCA]/50", pillActive: "bg-[#E0DCCA]/90", accent: "#E85D3A", btnBg: "bg-[#E85D3A]", btnHover: "hover:bg-[#D04E2E]", btnText: "text-white", contentText: "#3A3A3A", titleText: "#1A1A1A" }
+    ? { bg: "#14161F", card: "bg-white/[0.06]", cardBorder: "border-white/[0.08]", text: "text-neutral-100", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-white/[0.05]", inputBg: "bg-white/[0.08]", inputBorder: "border-white/[0.1]", pillBg: "bg-white/[0.06]", pillActive: "bg-white/[0.12]", accent: "#EA6B26", btnBg: "bg-[#EA6B26]", btnHover: "hover:bg-[#D45E1F]", btnText: "text-white", contentText: "#C8C8D0", titleText: "#EA6B26" }
+    : { bg: "#DBD4B8", card: "bg-white/70", cardBorder: "border-neutral-200/30", text: "text-neutral-900", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-[#E6DCC8]/80", inputBg: "bg-white/70", inputBorder: "border-neutral-200/40", pillBg: "bg-[#E0DCCA]/50", pillActive: "bg-[#E0DCCA]/90", accent: "#E85D3A", btnBg: "bg-[#E85D3A]", btnHover: "hover:bg-[#D04E2E]", btnText: "text-white", contentText: "#3A3A3A", titleText: "#1A1A1A" }
 
   useEffect(() => { localStorage.setItem("theme-dark", String(dark)) }, [dark])
 
@@ -244,13 +244,13 @@ function App() {
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className={`absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full blur-3xl ${dark ? 'bg-white/[0.02]' : 'bg-neutral-200/20'}`} />
         <div className={`absolute top-1/3 right-0 h-96 w-96 rounded-full blur-3xl ${dark ? 'bg-white/[0.015]' : 'bg-neutral-100/25'}`} />
-        <div className={`absolute bottom-0 left-1/3 h-80 w-80 rounded-full blur-3xl ${dark ? 'bg-[#F4845F]/[0.04]' : 'bg-[#E85D3A]/[0.03]'}`} />
+        <div className={`absolute bottom-0 left-1/3 h-80 w-80 rounded-full blur-3xl ${dark ? 'bg-[#EA6B26]/[0.04]' : 'bg-[#E85D3A]/[0.03]'}`} />
       </div>
       <nav className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-300 ${dark ? 'border-white/[0.06] bg-white/[0.04]' : 'border-neutral-200/40 bg-white/80'}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-4">
           <div className="flex items-center gap-4">
             <h1 className={`text-3xl font-black tracking-tight`} style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: '-0.04em' }}>
-              <span style={{ color: dark ? '#F4845F' : '#E85D3A' }}>V</span><span className={theme.text}>.</span>
+              <span style={{ color: dark ? '#EA6B26' : '#E85D3A' }}>V</span><span className={theme.text}>.</span>
             </h1>
             <span className={`text-[15px] font-bold ${theme.textSub}`}>工作時程</span>
             {loading ? <Loader2 size={12} className="animate-spin" style={{ color: theme.accent }} /> : synced ? <Cloud size={12} className={theme.textMuted} /> : <CloudOff size={12} className={theme.textMuted} />}
@@ -266,12 +266,12 @@ function App() {
           </div>
           <div className="flex items-center gap-3">
             <button onClick={() => { setDark(!dark); playClick() }}
-              className={`rounded-xl p-2.5 transition-all ${dark ? 'bg-white/[0.08] text-[#F4845F] hover:bg-white/[0.12]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60'}`}>
+              className={`rounded-xl p-2.5 transition-all ${dark ? 'bg-white/[0.08] text-[#EA6B26] hover:bg-white/[0.12]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60'}`}>
               {dark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
             <div className="relative" ref={settingsRef}>
               <button onClick={() => { setShowSettings(!showSettings); playClick() }}
-                className={`rounded-xl p-2.5 transition-all ${showSettings ? (dark ? 'bg-[#F4845F] text-white' : 'bg-[#E85D3A] text-white') : (dark ? 'bg-white/[0.08] text-neutral-400 hover:bg-white/[0.12]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60')}`}>
+                className={`rounded-xl p-2.5 transition-all ${showSettings ? (dark ? 'bg-[#EA6B26] text-white' : 'bg-[#E85D3A] text-white') : (dark ? 'bg-white/[0.08] text-neutral-400 hover:bg-white/[0.12]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60')}`}>
                 <Type size={16} />
               </button>
               {showSettings && (
@@ -600,7 +600,7 @@ function GanttView({ tasks, onEdit, onUpdateDates, dark, theme, fs, ls }) {
             ))}
           </div>
           {todayIndex >= 0 && (
-            <div className={`pointer-events-none absolute top-0 bottom-0 z-10 w-px ${dark ? 'bg-[#F4845F]/40' : 'bg-neutral-400/40'}`} style={{ left: `${((todayIndex + 0.5) / rangeDays) * 100}%` }} />
+            <div className={`pointer-events-none absolute top-0 bottom-0 z-10 w-px ${dark ? 'bg-[#EA6B26]/40' : 'bg-neutral-400/40'}`} style={{ left: `${((todayIndex + 0.5) / rangeDays) * 100}%` }} />
           )}
           <div className="relative" ref={containerRef}>
             {sortedTasks.map((task) => {
@@ -666,7 +666,7 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
   const addTag = () => { if (tagInput.trim() && !form.tags.find(t => t.text === tagInput.trim())) { setForm({ ...form, tags: [...form.tags, { text: tagInput.trim(), color: selectedTagColor }] }); setTagInput(""); setShowTagSuggestions(false) } }
   const addExistingTag = (lb) => { if (!form.tags.find(t => t.text === lb.text)) { setForm({ ...form, tags: [...form.tags, lb] }); setTagInput(""); setShowTagSuggestions(false) } }
   const removeTag = (text) => setForm({ ...form, tags: form.tags.filter((x) => x.text !== text) })
-  const inputClass = `w-full rounded-xl border ${dark ? 'border-white/[0.1] bg-white/[0.08] text-neutral-100' : 'border-neutral-200/60 bg-white/60 text-neutral-800'} px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${dark ? 'focus:ring-[#F4845F]/20' : 'focus:ring-neutral-200/50'}`
+  const inputClass = `w-full rounded-xl border ${dark ? 'border-white/[0.1] bg-white/[0.08] text-neutral-100' : 'border-neutral-200/60 bg-white/60 text-neutral-800'} px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${dark ? 'focus:ring-[#EA6B26]/20' : 'focus:ring-neutral-200/50'}`
   const labelClass = `mb-1.5 block text-[12px] font-bold uppercase tracking-widest ${theme.textSub}`
   const tabs = [
     { id: "basic", label: "基本" },
