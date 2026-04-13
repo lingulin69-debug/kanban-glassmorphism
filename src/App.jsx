@@ -126,7 +126,7 @@ function App() {
 
   const theme = dark
     ? { bg: "#14161F", card: "bg-white/[0.06]", cardBorder: "border-white/[0.08]", text: "text-neutral-100", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-white/[0.05]", inputBg: "bg-white/[0.08]", inputBorder: "border-white/[0.1]", pillBg: "bg-white/[0.06]", pillActive: "bg-white/[0.12]", accent: "#F4845F", btnBg: "bg-[#F4845F]", btnHover: "hover:bg-[#E07350]", btnText: "text-white", contentText: "#C8C8D0", titleText: "#F4845F" }
-    : { bg: "#FAFAF9", card: "bg-white/70", cardBorder: "border-neutral-200/30", text: "text-neutral-900", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-[#E0DCCA]/80", inputBg: "bg-white/70", inputBorder: "border-neutral-200/40", pillBg: "bg-[#E0DCCA]/50", pillActive: "bg-[#E0DCCA]/90", accent: "#E85D3A", btnBg: "bg-[#E85D3A]", btnHover: "hover:bg-[#D04E2E]", btnText: "text-white", contentText: "#3A3A3A", titleText: "#1A1A1A" }
+    : { bg: "#DBD4B8", card: "bg-white/70", cardBorder: "border-neutral-200/30", text: "text-neutral-900", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-[#E0DCCA]/80", inputBg: "bg-white/70", inputBorder: "border-neutral-200/40", pillBg: "bg-[#E0DCCA]/50", pillActive: "bg-[#E0DCCA]/90", accent: "#E85D3A", btnBg: "bg-[#E85D3A]", btnHover: "hover:bg-[#D04E2E]", btnText: "text-white", contentText: "#3A3A3A", titleText: "#1A1A1A" }
 
   useEffect(() => { localStorage.setItem("theme-dark", String(dark)) }, [dark])
 
@@ -230,7 +230,7 @@ function App() {
   ]
 
   if (loading) return (
-    <div className="flex min-h-screen items-center justify-center" style={{ background: dark ? '#14161F' : '#FAFAF9' }}>
+    <div className="flex min-h-screen items-center justify-center" style={{ background: dark ? '#14161F' : '#DBD4B8' }}>
       <div className="flex flex-col items-center gap-3">
         <Loader2 size={32} className="animate-spin" style={{ color: '#E85D3A' }} />
         <span className={`text-sm font-medium ${theme.textMuted}`}>載入中...</span>
@@ -239,7 +239,7 @@ function App() {
   )
 
   return (
-    <div className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ fontFamily: "'DM Sans', 'Noto Sans TC', sans-serif", background: dark ? '#14161F' : '#FAFAF9' }}>
+    <div className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ fontFamily: "'DM Sans', 'Noto Sans TC', sans-serif", background: dark ? '#14161F' : '#DBD4B8' }}>
       {/* Subtle blobs for glassmorphism depth */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className={`absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full blur-3xl ${dark ? 'bg-white/[0.02]' : 'bg-neutral-200/20'}`} />
