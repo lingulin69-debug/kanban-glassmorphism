@@ -18,6 +18,22 @@ function loadAssets() {
 
 const localDateStr = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 
+// Audio helpers — preload with 300% volume via Web Audio API
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
+const createLoudSound = (src, gain) => {
+  const audio = new Audio(src)
+  const source = audioCtx.createMediaElementSource(audio)
+  const gainNode = audioCtx.createGain()
+  gainNode.gain.value = gain
+  source.connect(gainNode).connect(audioCtx.destination)
+  return audio
+}
+const switchSound = createLoudSound('/audio/Random 1.wav', 3.0)
+const clickSound = createLoudSound('/audio/Random2.wav', 3.0)
+const resumeAudio = () => { if (audioCtx.state === 'suspended') audioCtx.resume() }
+const playSwitch = () => { resumeAudio(); switchSound.currentTime = 0; switchSound.play().catch(() => {}) }
+const playClick = () => { resumeAudio(); clickSound.currentTime = 0; clickSound.play().catch(() => {}) }
+
 function GlassCard({ children, className = "", intensity = "medium", dark = false, ...props }) {
   const bg = dark
     ? (intensity === "heavy" ? "bg-[#353434]/75 backdrop-blur-2xl backdrop-saturate-[180%]" : intensity === "light" ? "bg-[#353434]/50 backdrop-blur-lg backdrop-saturate-150" : "bg-[#353434]/65 backdrop-blur-xl backdrop-saturate-[180%]")
@@ -102,8 +118,8 @@ function App() {
   const ls = spacingScale[textSettings.spacing] ?? 1
 
   const theme = dark
-    ? { bg: "#292828", card: "bg-[#353434]/75", cardBorder: "border-[#C24C11]/40", text: "text-neutral-100", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-[#353434]/70", inputBg: "bg-[#3a3939]/60", inputBorder: "border-[#C24C11]/30", pillBg: "bg-[#3a3939]/60", pillActive: "bg-[#454444]", accent: "#F05917", btnBg: "bg-[#F05917]", btnHover: "hover:bg-[#d94e14]", btnText: "text-white" }
-    : { bg: "#DED5CC", card: "bg-white/65", cardBorder: "border-neutral-200/40", text: "text-neutral-900", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-white/70", inputBg: "bg-white/60", inputBorder: "border-neutral-200/50", pillBg: "bg-neutral-100/60", pillActive: "bg-white", accent: "#F05917", btnBg: "bg-[#F05917]", btnHover: "hover:bg-[#d94e14]", btnText: "text-white" }
+    ? { bg: "#444461", card: "bg-[#353434]/75", cardBorder: "border-[#C24C11]/40", text: "text-neutral-100", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-[#353434]/70", inputBg: "bg-[#3a3939]/60", inputBorder: "border-[#C24C11]/30", pillBg: "bg-[#3a3939]/60", pillActive: "bg-[#454444]", accent: "#F05917", btnBg: "bg-[#F05917]", btnHover: "hover:bg-[#d94e14]", btnText: "text-white", contentText: "#D6D6D6", titleText: "#D65926" }
+    : { bg: "#DED5CC", card: "bg-white/65", cardBorder: "border-neutral-200/40", text: "text-neutral-900", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-white/70", inputBg: "bg-white/60", inputBorder: "border-neutral-200/50", pillBg: "bg-neutral-100/60", pillActive: "bg-white", accent: "#F05917", btnBg: "bg-[#F05917]", btnHover: "hover:bg-[#d94e14]", btnText: "text-white", contentText: "#262626", titleText: "#1C1C1C" }
 
   useEffect(() => { localStorage.setItem("theme-dark", String(dark)) }, [dark])
 
@@ -154,6 +170,7 @@ function App() {
   // Also save to localStorage as backup
   useEffect(() => { if (tasks.length > 0) localStorage.setItem("sketch-board-tasks", JSON.stringify(tasks)) }, [tasks])
 
+  const [filterLabel, setFilterLabel] = useState(null)
   const filtered = useMemo(() => {
     let result = tasks
     if (search) { const q = search.toLowerCase(); result = result.filter((t) => t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)) }
@@ -193,7 +210,6 @@ function App() {
   }
   const openNew = () => { setEditTask(null); setShowModal(true) }
   const openEdit = (t) => { setEditTask(t); setShowModal(true) }
-  const [filterLabel, setFilterLabel] = useState(null)
   const globalLabels = useMemo(() => {
     const map = new Map()
     tasks.forEach(t => (t.tags || []).forEach(tag => { const mt = migrateTag(tag); if (!map.has(mt.text)) map.set(mt.text, mt) }))
@@ -207,7 +223,7 @@ function App() {
   ]
 
   if (loading) return (
-    <div className="flex min-h-screen items-center justify-center" style={{ background: dark ? '#292828' : '#DED5CC' }}>
+    <div className="flex min-h-screen items-center justify-center" style={{ background: dark ? '#444461' : '#DED5CC' }}>
       <div className="flex flex-col items-center gap-3">
         <Loader2 size={32} className="animate-spin" style={{ color: '#F05917' }} />
         <span className={`text-sm font-medium ${theme.textMuted}`}>載入中...</span>
@@ -216,7 +232,7 @@ function App() {
   )
 
   return (
-    <div className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ fontFamily: "'Inter', 'Noto Serif TC', sans-serif", background: dark ? '#292828' : '#DED5CC' }}>
+    <div className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ fontFamily: "'Inter', 'Noto Serif TC', sans-serif", background: dark ? '#444461' : '#DED5CC' }}>
       {/* Subtle blobs for glassmorphism depth */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className={`absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full blur-2xl ${dark ? 'bg-neutral-700/20' : 'bg-neutral-300/25'}`} />
@@ -234,7 +250,7 @@ function App() {
           </div>
           <div className={`flex items-center gap-1 rounded-xl p-1 ${theme.pillBg}`}>
             {views.map((v) => (
-              <button key={v.id} onClick={() => setView(v.id)}
+              <button key={v.id} onClick={() => { setView(v.id); playSwitch() }}
                 className={`relative flex items-center gap-1.5 rounded-lg px-4 py-2 text-[13px] font-semibold transition-all ${view === v.id ? theme.text : `${theme.textMuted} hover:${theme.textSub}`}`}>
                 {view === v.id && <motion.div layoutId="nav-pill" className={`absolute inset-0 rounded-lg shadow-sm ${theme.pillActive}`} transition={{ type: "spring", stiffness: 400, damping: 30 }} />}
                 <span className="relative z-10 flex items-center gap-1.5"><v.icon size={15} />{v.label}</span>
@@ -242,12 +258,12 @@ function App() {
             ))}
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => setDark(!dark)}
+            <button onClick={() => { setDark(!dark); playClick() }}
               className={`rounded-xl p-2.5 transition-all ${dark ? 'bg-[#454444] text-amber-300 hover:bg-[#505050]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60'}`}>
               {dark ? <Sun size={16} /> : <Moon size={16} />}
             </button>
             <div className="relative" ref={settingsRef}>
-              <button onClick={() => setShowSettings(!showSettings)}
+              <button onClick={() => { setShowSettings(!showSettings); playClick() }}
                 className={`rounded-xl p-2.5 transition-all ${showSettings ? (dark ? 'bg-[#F05917] text-white' : 'bg-[#F05917] text-white') : (dark ? 'bg-[#454444] text-neutral-300 hover:bg-[#505050]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60')}`}>
                 <Type size={16} />
               </button>
@@ -262,23 +278,9 @@ function App() {
                       </div>
                       <div className="flex gap-1">
                         {[0,1,2,3].map(i => (
-                          <button key={i} onClick={() => setTextSettings({...textSettings, size: i})}
+                          <button key={i} onClick={() => { setTextSettings({...textSettings, size: i}); playClick() }}
                             className={`flex-1 rounded-lg py-1.5 text-[11px] font-bold transition-all ${textSettings.size === i ? `${theme.btnBg} ${theme.btnText}` : `${dark ? 'bg-[#454444] text-neutral-400' : 'bg-neutral-100 text-neutral-500'} hover:opacity-80`}`}>
                             {['S','M','L','XL'][i]}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <div className={`mb-1.5 flex items-center justify-between text-[12px] font-medium ${theme.textSub}`}>
-                        <span>行間距</span>
-                        <span className={`text-[11px] ${theme.textMuted}`}>{['緊湊', '標準', '寬鬆', '超寬'][textSettings.spacing]}</span>
-                      </div>
-                      <div className="flex gap-1">
-                        {[0,1,2,3].map(i => (
-                          <button key={i} onClick={() => setTextSettings({...textSettings, spacing: i})}
-                            className={`flex-1 rounded-lg py-1.5 text-[11px] font-bold transition-all ${textSettings.spacing === i ? `${theme.btnBg} ${theme.btnText}` : `${dark ? 'bg-[#454444] text-neutral-400' : 'bg-neutral-100 text-neutral-500'} hover:opacity-80`}`}>
-                            {['1','2','3','4'][i]}
                           </button>
                         ))}
                       </div>
@@ -287,7 +289,7 @@ function App() {
                 </div>
               )}
             </div>
-            <button onClick={openNew}
+            <button onClick={() => { openNew(); playClick() }}
               className={`flex items-center gap-1.5 rounded-xl ${theme.btnBg} px-5 py-2.5 text-[13px] font-bold ${theme.btnText} shadow-sm transition-all ${theme.btnHover} active:scale-[0.98]`}>
               <Plus size={16} />新增任務
             </button>
@@ -300,12 +302,12 @@ function App() {
         <div className="mx-auto max-w-7xl px-8 pt-5">
           <div className={`flex items-center gap-2 overflow-x-auto rounded-xl border p-2.5 ${dark ? 'border-white/10 bg-[#353434]/50' : 'border-white/10 bg-white/50'}`} style={{ backdropFilter: 'blur(12px)' }}>
             <Tag size={13} className={theme.textMuted} />
-            <button onClick={() => setFilterLabel(null)}
+            <button onClick={() => { setFilterLabel(null); playClick() }}
               className={`shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${!filterLabel ? `${theme.btnBg} ${theme.btnText}` : `${dark ? 'text-neutral-400 hover:bg-[#454444]' : 'text-neutral-500 hover:bg-neutral-100/80'}`}`}>
               全部
             </button>
             {globalLabels.map((lb) => (
-              <button key={lb.text} onClick={() => setFilterLabel(filterLabel === lb.text ? null : lb.text)}
+              <button key={lb.text} onClick={() => { setFilterLabel(filterLabel === lb.text ? null : lb.text); playClick() }}
                 className={`shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${filterLabel === lb.text ? 'text-white shadow-sm' : 'hover:brightness-90'}`}
                 style={filterLabel === lb.text ? { backgroundColor: lb.color } : { backgroundColor: `${lb.color}20`, color: lb.color }}>
                 {lb.text}
@@ -328,12 +330,12 @@ function App() {
                 <Filter size={12} />篩選
               </div>
               <div className="space-y-1">
-                <button onClick={() => setFilterPriority("all")}
+                <button onClick={() => { setFilterPriority("all"); playClick() }}
                   className={`w-full rounded-lg px-3 py-2 text-left text-[12px] font-medium transition-all ${filterPriority === "all" ? `${theme.pillActive} ${theme.text} shadow-sm` : `${theme.textMuted} hover:${theme.pillBg}`}`}>
                   全部
                 </button>
                 {PRIORITIES.map((p) => (
-                  <button key={p.id} onClick={() => setFilterPriority(p.id)}
+                  <button key={p.id} onClick={() => { setFilterPriority(p.id); playClick() }}
                     className={`w-full rounded-lg px-3 py-2 text-left text-[12px] font-medium transition-all ${filterPriority === p.id ? `${theme.pillActive} ${theme.text} shadow-sm` : `${theme.textMuted} hover:${theme.pillBg}`}`}>
                     <span className="mr-2 inline-block h-2 w-2 rounded-full" style={{ backgroundColor: p.color }} />
                     {p.label}優先
@@ -395,12 +397,12 @@ function BoardView({ tasks, columns, onEdit, onDrop, dragItem, setDragItem, dark
                 <motion.div key={task.id} layout="position" layoutId={task.id}
                   draggable onDragStart={() => setDragItem(task.id)} onDragEnd={() => setDragItem(null)}
                   whileHover={{ y: -2 }} transition={{ type: "spring", stiffness: 300, damping: 25 }}>
-                  <GlassCard className="cursor-pointer p-4 transition-all hover:shadow-md" dark={dark} onClick={() => onEdit(task)}>
+                  <GlassCard className="cursor-pointer p-4 transition-all hover:shadow-md" dark={dark} onClick={() => { onEdit(task); playClick() }}>
                     <div className="mb-2 flex items-start justify-between" style={{ marginBottom: `${8 * ls}px` }}>
-                      <h4 className={`font-bold leading-snug ${theme.text}`} style={{ fontSize: `${14 * fs}px`, lineHeight: `${1.4 * ls}` }}>{task.title}</h4>
+                      <h4 className="font-black leading-snug" style={{ fontSize: `${17 * fs}px`, lineHeight: `${1.4 * ls}`, color: theme.titleText }}>{task.title}</h4>
                       <GripVertical size={14} className={theme.textMuted} />
                     </div>
-                    {task.description && <p className={`leading-relaxed ${theme.textSub}`} style={{ fontSize: `${12 * fs}px`, lineHeight: `${1.5 * ls}`, marginBottom: `${12 * ls}px` }}>{task.description}</p>}
+                    {task.description && <p className="leading-relaxed font-semibold" style={{ fontSize: `${15 * fs}px`, lineHeight: `${1.5 * ls}`, marginBottom: `${12 * ls}px`, color: theme.contentText }}>{task.description}</p>}
                     <div className="flex items-center justify-between">
                       <div className="flex gap-1">
                         {task.tags.slice(0, 2).map((tag) => (
@@ -453,12 +455,12 @@ function CalendarView({ tasks, onEdit, dark, theme, fs, ls }) {
           </h2>
           <div className={`flex items-center gap-1 rounded-lg p-0.5 ${theme.pillBg}`}>
             <button className={`rounded-md p-1.5 transition-all ${dark ? 'hover:bg-[#454444]' : 'hover:bg-white'}`}
-              onClick={() => { const d = new Date(curr); d.setMonth(d.getMonth() - 1); setCurr(d) }}>
+              onClick={() => { const d = new Date(curr); d.setMonth(d.getMonth() - 1); setCurr(d); playClick() }}>
               <ChevronLeft size={16} className={theme.textSub} />
             </button>
-            <button onClick={() => setCurr(new Date())} className={`px-2.5 py-1 font-semibold ${theme.textSub} hover:${theme.text}`} style={{ fontSize: `${12 * fs}px` }}>今天</button>
+            <button onClick={() => { setCurr(new Date()); playClick() }} className={`px-2.5 py-1 font-semibold ${theme.textSub} hover:${theme.text}`} style={{ fontSize: `${12 * fs}px` }}>今天</button>
             <button className={`rounded-md p-1.5 transition-all ${dark ? 'hover:bg-[#454444]' : 'hover:bg-white'}`}
-              onClick={() => { const d = new Date(curr); d.setMonth(d.getMonth() + 1); setCurr(d) }}>
+              onClick={() => { const d = new Date(curr); d.setMonth(d.getMonth() + 1); setCurr(d); playClick() }}>
               <ChevronRight size={16} className={theme.textSub} />
             </button>
           </div>
@@ -476,9 +478,9 @@ function CalendarView({ tasks, onEdit, dark, theme, fs, ls }) {
                 <span className={`mb-1 inline-flex h-6 w-6 items-center justify-center font-semibold ${d.isToday ? "rounded-full bg-[#F05917] text-white" : theme.text}`} style={{ fontSize: `${12 * fs}px` }}>{d.day}</span>
                 <div className="space-y-0.5">
                   {dayTasks.slice(0, 3).map((t) => (
-                    <div key={t.id} onClick={() => onEdit(t)}
+                    <div key={t.id} onClick={() => { onEdit(t); playClick() }}
                       className="cursor-pointer truncate rounded-md px-1.5 py-0.5 font-medium transition-all hover:brightness-95"
-                      style={{ backgroundColor: `${t.color}15`, borderLeft: `2px solid ${t.color}`, color: dark ? '#a3a3a3' : '#404040', fontSize: `${10 * fs}px` }}>
+                      style={{ backgroundColor: `${t.color}15`, borderLeft: `2px solid ${t.color}`, color: theme.contentText, fontSize: `${13 * fs}px`, fontWeight: 600 }}>
                       {t.title}
                     </div>
                   ))}
@@ -495,8 +497,10 @@ function CalendarView({ tasks, onEdit, dark, theme, fs, ls }) {
 
 function GanttView({ tasks, onEdit, onUpdateDates, dark, theme, fs, ls }) {
   const [rangeDays, setRangeDays] = useState(21)
-  const dragRef = useRef(null)
   const containerRef = useRef(null)
+  const [ghost, setGhost] = useState(null) // { id, left, width, startDate, endDate }
+  const ghostRef = useRef(null)
+  const rafRef = useRef(null)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const startDate = useMemo(() => {
@@ -524,21 +528,42 @@ function GanttView({ tasks, onEdit, onUpdateDates, dark, theme, fs, ls }) {
     const startX = e.clientX
     const origStart = new Date(task.startDate); origStart.setHours(0,0,0,0)
     const origEnd = new Date(task.endDate); origEnd.setHours(0,0,0,0)
+    let lastDaysDelta = 0
+    const computeGhost = (daysDelta) => {
+      let newStart = new Date(origStart), newEnd = new Date(origEnd)
+      if (edge === 'move') { newStart.setDate(newStart.getDate() + daysDelta); newEnd.setDate(newEnd.getDate() + daysDelta) }
+      else if (edge === 'start') { newStart.setDate(newStart.getDate() + daysDelta); if (newStart >= newEnd) return null }
+      else if (edge === 'end') { newEnd.setDate(newEnd.getDate() + daysDelta); if (newEnd <= newStart) return null }
+      newStart.setHours(0,0,0,0); newEnd.setHours(0,0,0,0)
+      const sIdx = Math.max(0, Math.round((newStart - startDate) / 86400000))
+      const eIdx = Math.min(rangeDays - 1, Math.round((newEnd - startDate) / 86400000))
+      if (eIdx < 0 || sIdx >= rangeDays) return null
+      return { id: task.id, left: `${(sIdx / rangeDays) * 100}%`, width: `${(Math.max(1, eIdx - sIdx + 1) / rangeDays) * 100}%`, startDate: localDateStr(newStart), endDate: localDateStr(newEnd) }
+    }
     const onMove = (ev) => {
       const dx = ev.clientX - startX
       const daysDelta = Math.round(dx / dayW)
-      if (daysDelta === 0) return
-      let newStart = new Date(origStart), newEnd = new Date(origEnd)
-      if (edge === 'move') { newStart.setDate(newStart.getDate() + daysDelta); newEnd.setDate(newEnd.getDate() + daysDelta) }
-      else if (edge === 'start') { newStart.setDate(newStart.getDate() + daysDelta); if (newStart >= newEnd) return }
-      else if (edge === 'end') { newEnd.setDate(newEnd.getDate() + daysDelta); if (newEnd <= newStart) return }
-      dragRef.current = { id: task.id, startDate: localDateStr(newStart), endDate: localDateStr(newEnd) }
+      if (daysDelta === lastDaysDelta) return
+      lastDaysDelta = daysDelta
+      if (rafRef.current) cancelAnimationFrame(rafRef.current)
+      rafRef.current = requestAnimationFrame(() => {
+        const g = computeGhost(daysDelta)
+        ghostRef.current = g
+        setGhost(g)
+      })
     }
     const onUp = () => {
       document.removeEventListener('mousemove', onMove)
       document.removeEventListener('mouseup', onUp)
-      if (dragRef.current) { onUpdateDates(dragRef.current.id, dragRef.current.startDate, dragRef.current.endDate); dragRef.current = null }
+      if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null }
+      const final = ghostRef.current
+      setGhost(null); ghostRef.current = null
+      if (final) { onUpdateDates(final.id, final.startDate, final.endDate); playClick() }
     }
+    // Show initial ghost (same position)
+    const initialGhost = computeGhost(0)
+    ghostRef.current = initialGhost
+    setGhost(initialGhost)
     document.addEventListener('mousemove', onMove)
     document.addEventListener('mouseup', onUp)
   }
@@ -549,7 +574,7 @@ function GanttView({ tasks, onEdit, onUpdateDates, dark, theme, fs, ls }) {
           <h2 className={`text-lg font-black ${theme.text}`} style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em', fontSize: `${18 * fs}px` }}>甘特圖</h2>
           <div className={`flex items-center gap-1 rounded-lg p-0.5 ${theme.pillBg}`}>
             {[7, 14, 21, 30].map((d) => (
-              <button key={d} onClick={() => setRangeDays(d)}
+              <button key={d} onClick={() => { setRangeDays(d); playClick() }}
                 className={`rounded-md px-2.5 py-1 font-semibold transition-all ${rangeDays === d ? `${theme.pillActive} ${theme.text} shadow-sm` : `${theme.textMuted} hover:${theme.text}`}`}
                 style={{ fontSize: `${12 * fs}px` }}>
                 {d}天
@@ -576,17 +601,22 @@ function GanttView({ tasks, onEdit, onUpdateDates, dark, theme, fs, ls }) {
               if (!style) return null
               return (
                 <div key={task.id} className={`group flex items-center gap-3 border-b px-4 py-2.5 ${dark ? 'border-[#C24C11]/20' : 'border-neutral-50/40'}`}>
-                  <div className={`w-[140px] shrink-0 truncate font-medium ${theme.textSub}`} style={{ fontSize: `${12 * fs}px` }}>{task.title}</div>
+                  <div className="w-[140px] shrink-0 truncate font-black" style={{ fontSize: `${15 * fs}px`, color: theme.titleText }}>{task.title}</div>
                   <div className="relative h-7 flex-1">
+                    {/* Ghost preview box during drag */}
+                    {ghost && ghost.id === task.id && (
+                      <div className="absolute top-0 h-full rounded-md pointer-events-none z-20 transition-[left,width] duration-75"
+                        style={{ left: ghost.left, width: ghost.width, backgroundColor: `${task.color}30`, border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 0 8px rgba(255,255,255,0.08)' }} />
+                    )}
                     <motion.div initial={{ scaleX: 0, opacity: 0 }} animate={{ scaleX: 1, opacity: 1 }}
                       transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                      className="absolute top-0 h-full rounded-md transition-all group-hover:brightness-95"
+                      className={`absolute top-0 h-full rounded-md transition-all group-hover:brightness-95 ${ghost && ghost.id === task.id ? 'opacity-40' : ''}`}
                       style={{ left: style.left, width: style.width, originX: 0, backgroundColor: `${task.color}15`, borderLeft: `3px solid ${task.color}`, cursor: 'grab' }}
                       onMouseDown={(e) => handleBarDrag(e, task, 'move')}>
                       {/* Left resize handle */}
                       <div className="absolute left-0 top-0 h-full w-2 cursor-col-resize opacity-0 group-hover:opacity-100 transition-opacity"
                         onMouseDown={(e) => handleBarDrag(e, task, 'start')} />
-                      <span className={`absolute inset-0 flex items-center truncate px-2 font-medium ${theme.textSub} pointer-events-none`} style={{ fontSize: `${10 * fs}px` }}>{task.title}</span>
+                      <span className="absolute inset-0 flex items-center truncate px-2 font-bold pointer-events-none" style={{ fontSize: `${13 * fs}px`, color: theme.contentText }}>{task.title}</span>
                       {/* Right resize handle */}
                       <div className="absolute right-0 top-0 h-full w-2 cursor-col-resize opacity-0 group-hover:opacity-100 transition-opacity"
                         onMouseDown={(e) => handleBarDrag(e, task, 'end')} />
@@ -650,13 +680,13 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
           <h3 className={`text-lg font-black ${theme.text}`} style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.02em' }}>
             {task ? "編輯任務" : "新增任務"}
           </h3>
-          <button onClick={onClose} className={`rounded-full p-1.5 transition-all ${dark ? 'hover:bg-[#454444]' : 'hover:bg-neutral-100/80'}`}>
+          <button onClick={() => { onClose(); playClick() }} className={`rounded-full p-1.5 transition-all ${dark ? 'hover:bg-[#454444]' : 'hover:bg-neutral-100/80'}`}>
             <X size={18} className={theme.textSub} />
           </button>
         </div>
         <div className={`flex border-b px-5 ${dark ? 'border-[#C24C11]/30' : 'border-neutral-100/60'}`}>
           {tabs.map((t) => (
-            <button key={t.id} onClick={() => setTab(t.id)}
+            <button key={t.id} onClick={() => { setTab(t.id); playClick() }}
               className={`relative px-4 py-3 text-[13px] font-bold transition-colors ${tab === t.id ? theme.text : `${theme.textSub} hover:${theme.text}`}`}>
               {t.label}
               {tab === t.id && <motion.div layoutId="modal-tab" className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#F05917] rounded-full" />}
@@ -679,7 +709,7 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
                   <label className={labelClass}>狀態</label>
                   <div className="grid grid-cols-4 gap-2">
                     {COLUMNS.map((c) => (
-                      <button key={c.id} onClick={() => setForm({ ...form, column: c.id })}
+                      <button key={c.id} onClick={() => { setForm({ ...form, column: c.id }); playClick() }}
                         className={`rounded-xl px-2 py-2 text-[12px] font-bold transition-all ${form.column === c.id ? `${theme.btnBg} text-white shadow-md` : `${dark ? 'bg-[#454444]/80 text-neutral-400 hover:bg-[#505050]' : 'bg-neutral-50/80 text-neutral-500 hover:bg-neutral-100'}`}`}>
                         {c.label}
                       </button>
@@ -690,7 +720,7 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
                   <label className={labelClass}>優先級</label>
                   <div className="grid grid-cols-3 gap-2">
                     {PRIORITIES.map((p) => (
-                      <button key={p.id} onClick={() => setForm({ ...form, priority: p.id })}
+                      <button key={p.id} onClick={() => { setForm({ ...form, priority: p.id }); playClick() }}
                         className={`rounded-xl px-2 py-2 text-[12px] font-bold transition-all ${form.priority === p.id ? "text-white shadow-md" : "bg-neutral-50/80 text-neutral-500 hover:bg-neutral-100"}`}
                         style={form.priority === p.id ? { backgroundColor: p.color } : {}}>
                         {p.label}
@@ -715,20 +745,10 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
             {tab === "details" && (
               <motion.div key="details" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} className="space-y-4">
                 <div>
-                  <label className={labelClass}>顏色</label>
-                  <div className="flex flex-wrap gap-2">
-                    {MORANDI_COLORS.map((c) => (
-                      <button key={c} onClick={() => setForm({ ...form, color: c })}
-                        className={`h-8 w-8 rounded-full transition-all ${form.color === c ? "ring-2 ring-neutral-400 ring-offset-2 scale-110" : "hover:scale-105"}`}
-                        style={{ backgroundColor: c }} />
-                    ))}
-                  </div>
-                </div>
-                <div>
                   <label className={labelClass}>標籤</label>
                   <div className="mb-2 flex flex-wrap gap-1.5">
                     {TAG_COLORS.map((tc) => (
-                      <button key={tc.id} onClick={() => setSelectedTagColor(tc.color)}
+                      <button key={tc.id} onClick={() => { setSelectedTagColor(tc.color); playClick() }}
                         className={`h-6 w-6 rounded-full transition-all ${selectedTagColor === tc.color ? 'ring-2 ring-offset-1 scale-110' : 'hover:scale-105'}`}
                         style={{ backgroundColor: tc.color, ringColor: tc.color }} />
                     ))}
@@ -738,11 +758,11 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
                       onChange={(e) => { setTagInput(e.target.value); setShowTagSuggestions(true) }}
                       onFocus={() => setShowTagSuggestions(true)}
                       onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())} placeholder="輸入或選擇標籤..." />
-                    <button onClick={addTag} className={`rounded-xl px-4 text-[12px] font-bold text-white transition-all hover:brightness-90`} style={{ backgroundColor: selectedTagColor }}>加入</button>
+                    <button onClick={() => { addTag(); playClick() }} className={`rounded-xl px-4 text-[12px] font-bold text-white transition-all hover:brightness-90`} style={{ backgroundColor: selectedTagColor }}>加入</button>
                     {showTagSuggestions && tagSuggestions.length > 0 && (
                       <div className={`absolute left-0 top-full z-50 mt-1 max-h-[140px] w-full overflow-y-auto rounded-xl border shadow-lg ${dark ? 'border-white/10 bg-[#353434]/95' : 'border-white/10 bg-white/95'}`} style={{ backdropFilter: 'blur(12px)' }}>
                         {tagSuggestions.map((lb) => (
-                          <button key={lb.text} onClick={() => addExistingTag(lb)}
+                          <button key={lb.text} onClick={() => { addExistingTag(lb); playClick() }}
                             className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-medium transition-all ${dark ? 'text-neutral-300 hover:bg-[#454444]' : 'text-neutral-600 hover:bg-neutral-50'}`}>
                             <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: lb.color }} />
                             {lb.text}
@@ -756,7 +776,7 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
                       {form.tags.map((t) => (
                         <span key={t.text} className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium"
                           style={{ backgroundColor: `${t.color}20`, color: t.color }}>
-                          {t.text}<button onClick={() => removeTag(t.text)} className="opacity-60 hover:opacity-100"><X size={12} /></button>
+                          {t.text}<button onClick={() => { removeTag(t.text); playClick() }} className="opacity-60 hover:opacity-100"><X size={12} /></button>
                         </span>
                       ))}
                     </div>
@@ -769,15 +789,15 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
         <div className={`flex items-center justify-between border-t p-5 ${dark ? 'border-[#C24C11]/30' : 'border-neutral-100/60'}`}>
           <div>
             {task && (
-              <button onClick={() => { onDelete(task.id); onClose() }}
+              <button onClick={() => { onDelete(task.id); onClose(); playClick() }}
                 className={`rounded-xl px-4 py-2.5 text-[13px] font-bold text-red-400 transition-all ${dark ? 'hover:bg-red-900/20' : 'hover:bg-red-50'} hover:text-red-500`}>
                 刪除任務
               </button>
             )}
           </div>
           <div className="flex gap-2">
-            <button onClick={onClose} className={`rounded-xl px-5 py-2.5 text-[13px] font-bold transition-all ${theme.textMuted} ${dark ? 'hover:bg-[#454444]' : 'hover:bg-neutral-100/80'}`}>取消</button>
-            <button onClick={() => { if (!form.title.trim()) return; onSave(form); onClose() }}
+            <button onClick={() => { onClose(); playClick() }} className={`rounded-xl px-5 py-2.5 text-[13px] font-bold transition-all ${theme.textMuted} ${dark ? 'hover:bg-[#454444]' : 'hover:bg-neutral-100/80'}`}>取消</button>
+            <button onClick={() => { if (!form.title.trim()) return; onSave(form); onClose(); playClick() }}
               className={`rounded-xl ${theme.btnBg} px-5 py-2.5 text-[13px] font-bold ${theme.btnText} shadow-sm transition-all ${theme.btnHover} active:scale-[0.98]`}>
               {task ? "儲存變更" : "建立任務"}
             </button>
