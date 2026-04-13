@@ -12,9 +12,13 @@ create table if not exists public.tasks (
   end_date text,
   tags text[] default '{}',
   color text default '#8B9DAF',
+  dependencies jsonb default '[]',
   created_at timestamptz default now(),
   updated_at timestamptz default now()
 );
+
+-- 如果 tasks 表已存在，新增 dependencies 欄位
+alter table public.tasks add column if not exists dependencies jsonb default '[]';
 
 -- 啟用 RLS（行級安全）
 alter table public.tasks enable row level security;

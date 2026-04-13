@@ -4,9 +4,10 @@ import {
   Plus, Search, X, GripVertical, Calendar, BarChart3, LayoutGrid,
   ChevronLeft, ChevronRight, Tag, Clock, AlertCircle, CheckCircle2,
   Circle, Timer, Sparkles, Filter, Loader2, Cloud, CloudOff, Sun, Moon, SlidersHorizontal, Type, Minus,
-  ChevronDown, ArrowUpDown, Lightbulb
+  ChevronDown, ArrowUpDown, Lightbulb, Workflow
 } from "lucide-react"
 import { supabase } from "./supabaseClient"
+import GraphView from "./GraphView"
 
 function loadAssets() {
   if (!document.querySelector('link[href*="fonts.googleapis"]')) {
@@ -95,8 +96,8 @@ const migrateTag = (t) => {
   if (t && typeof t === 'object' && t.text) return t
   return { text: String(t), color: TAG_COLORS[0].color }
 }
-const toDb = (t) => ({ id: t.id, title: t.title, description: t.description, column: t.column, priority: t.priority, start_date: t.startDate || null, end_date: t.endDate || null, tags: (t.tags || []).map(migrateTag), color: t.color || '#8B9DAF' })
-const fromDb = (r) => ({ id: r.id, title: r.title, description: r.description || '', column: r.column, priority: r.priority, startDate: r.start_date || '', endDate: r.end_date || '', tags: (r.tags || []).map(migrateTag), color: r.color || '#8B9DAF' })
+const toDb = (t) => ({ id: t.id, title: t.title, description: t.description, column: t.column, priority: t.priority, start_date: t.startDate || null, end_date: t.endDate || null, tags: (t.tags || []).map(migrateTag), color: t.color || '#8B9DAF', dependencies: t.dependencies || [] })
+const fromDb = (r) => ({ id: r.id, title: r.title, description: r.description || '', column: r.column, priority: r.priority, startDate: r.start_date || '', endDate: r.end_date || '', tags: (r.tags || []).map(migrateTag), color: r.color || '#8B9DAF', dependencies: r.dependencies || [] })
 
 /* ============================================
    Swipe Hook — detect horizontal swipe gestures
@@ -211,7 +212,7 @@ function App() {
   useEffect(() => { localStorage.setItem("theme-dark", String(dark)) }, [dark])
 
   // Swipe to switch views
-  const viewIds = ["board", "calendar", "gantt"]
+  const viewIds = ["board", "calendar", "gantt", "graph"]
   const swipeHandlers = useSwipe(
     () => { const idx = viewIds.indexOf(view); if (idx < viewIds.length - 1) { setView(viewIds[idx + 1]); playSwitch() } },
     () => { const idx = viewIds.indexOf(view); if (idx > 0) { setView(viewIds[idx - 1]); playSwitch() } }
@@ -219,7 +220,7 @@ function App() {
 
   // Reorderable view tabs state
   const [viewOrder, setViewOrder] = useState(() => {
-    try { const s = localStorage.getItem("view-order"); return s ? JSON.parse(s) : ["board", "calendar", "gantt"] } catch { return ["board", "calendar", "gantt"] }
+    try { const s = localStorage.getItem("view-order"); if (s) { const arr = JSON.parse(s); if (!arr.includes("graph")) arr.push("graph"); return arr } return ["board", "calendar", "gantt", "graph"] } catch { return ["board", "calendar", "gantt", "graph"] }
   })
   useEffect(() => { localStorage.setItem("view-order", JSON.stringify(viewOrder)) }, [viewOrder])
 
@@ -312,6 +313,11 @@ function App() {
   }, [])
   const openNew = () => { setEditTask(null); setShowModal(true) }
   const openEdit = useCallback((t) => { setEditTask(t); setShowModal(true) }, [])
+  const handleSaveDeps = useCallback(async (id, deps) => {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, dependencies: deps } : t))
+    const { error } = await supabase.from('tasks').update({ dependencies: deps }).eq('id', id)
+    if (error) { console.error('Deps update error:', error); setSynced(false) } else setSynced(true)
+  }, [])
   const globalLabels = useMemo(() => {
     const map = new Map()
     tasks.forEach(t => (t.tags || []).forEach(tag => { const mt = migrateTag(tag); if (!map.has(mt.text)) map.set(mt.text, mt) }))
@@ -322,6 +328,7 @@ function App() {
     board: { label: "看板", icon: LayoutGrid },
     calendar: { label: "月曆", icon: Calendar },
     gantt: { label: "甘特圖", icon: BarChart3 },
+    graph: { label: "關聯圖", icon: Workflow },
   }
 
   if (loading) return (
@@ -527,6 +534,9 @@ function App() {
             {view === "board" && <BoardView key="board" tasks={filtered} columns={COLUMNS} onEdit={openEdit} onDrop={handleDrop} dragItem={dragItem} setDragItem={setDragItem} dark={dark} theme={theme} fs={fs} ls={ls} boardSort={boardSort} setBoardSort={setBoardSort} />}
             {view === "calendar" && <CalendarView key="calendar" tasks={filtered} onEdit={openEdit} dark={dark} theme={theme} fs={fs} ls={ls} />}
             {view === "gantt" && <GanttView key="gantt" tasks={filtered} onEdit={openEdit} onUpdateDates={handleUpdateDates} dark={dark} theme={theme} fs={fs} ls={ls} onShowDetail={setSheetTask} />}
+            <div style={{ display: view === "graph" ? "block" : "none" }}>
+              <GraphView tasks={filtered} onEdit={openEdit} onSaveDeps={handleSaveDeps} dark={dark} theme={theme} fs={fs} />
+            </div>
         </main>
       </div>
 
