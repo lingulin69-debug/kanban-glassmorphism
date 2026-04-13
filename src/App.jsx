@@ -487,7 +487,7 @@ function CalendarView({ tasks, onEdit, dark, theme, fs, ls }) {
                   {dayTasks.slice(0, 3).map((t) => (
                     <div key={t.id} onClick={() => { onEdit(t); playClick() }}
                       className="cursor-pointer truncate rounded-md px-1.5 py-0.5 font-medium transition-all hover:brightness-95"
-                      style={{ backgroundColor: `${t.color}15`, borderLeft: `2px solid ${t.color}`, color: theme.contentText, fontSize: `${13 * fs}px`, fontWeight: 600 }}>
+                      style={{ backgroundColor: `${t.color}35`, borderLeft: `2px solid ${t.color}`, color: theme.contentText, fontSize: `${13 * fs}px`, fontWeight: 600 }}>
                       {t.title}
                     </div>
                   ))}
@@ -613,12 +613,12 @@ function GanttView({ tasks, onEdit, onUpdateDates, dark, theme, fs, ls }) {
                     {/* Ghost preview box during drag */}
                     {ghost && ghost.id === task.id && (
                       <div className="absolute top-0 h-full rounded-md pointer-events-none z-20 transition-[left,width] duration-75"
-                        style={{ left: ghost.left, width: ghost.width, backgroundColor: `${task.color}30`, border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 0 8px rgba(255,255,255,0.08)' }} />
+                        style={{ left: ghost.left, width: ghost.width, backgroundColor: `${task.color}50`, border: '1px solid rgba(255,255,255,0.2)', boxShadow: '0 0 8px rgba(255,255,255,0.08)' }} />
                     )}
                     <motion.div initial={{ scaleX: 0, opacity: 0 }} animate={{ scaleX: 1, opacity: 1 }}
                       transition={{ type: "spring", stiffness: 200, damping: 25 }}
                       className={`absolute top-0 h-full rounded-md transition-all group-hover:brightness-95 ${ghost && ghost.id === task.id ? 'opacity-40' : ''}`}
-                      style={{ left: style.left, width: style.width, originX: 0, backgroundColor: `${task.color}15`, borderLeft: `3px solid ${task.color}`, cursor: 'grab' }}
+                      style={{ left: style.left, width: style.width, originX: 0, backgroundColor: `${task.color}35`, borderLeft: `3px solid ${task.color}`, cursor: 'grab' }}
                       onMouseDown={(e) => handleBarDrag(e, task, 'move')}>
                       {/* Left resize handle */}
                       <div className="absolute left-0 top-0 h-full w-2 cursor-col-resize opacity-0 group-hover:opacity-100 transition-opacity"
