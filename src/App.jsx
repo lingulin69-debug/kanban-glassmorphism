@@ -36,7 +36,7 @@ const playClick = () => { resumeAudio(); clickSound.currentTime = 0; clickSound.
 
 function GlassCard({ children, className = "", intensity = "medium", dark = false, ...props }) {
   const bg = dark
-    ? (intensity === "heavy" ? "bg-[#3B3B56]/80 backdrop-blur-2xl backdrop-saturate-[180%]" : intensity === "light" ? "bg-[#3B3B56]/50 backdrop-blur-lg backdrop-saturate-150" : "bg-[#3B3B56]/65 backdrop-blur-xl backdrop-saturate-[180%]")
+    ? (intensity === "heavy" ? "bg-[#3B3B56]/65 backdrop-blur-2xl backdrop-saturate-[180%]" : intensity === "light" ? "bg-[#3B3B56]/35 backdrop-blur-lg backdrop-saturate-150" : "bg-[#3B3B56]/50 backdrop-blur-xl backdrop-saturate-[180%]")
     : (intensity === "heavy" ? "bg-white/75 backdrop-blur-2xl backdrop-saturate-[180%]" : intensity === "light" ? "bg-white/50 backdrop-blur-lg backdrop-saturate-150" : "bg-white/65 backdrop-blur-xl backdrop-saturate-[180%]")
   const border = dark ? "border-transparent" : "border-neutral-200/40"
   return (
@@ -118,7 +118,7 @@ function App() {
   const ls = spacingScale[textSettings.spacing] ?? 1
 
   const theme = dark
-    ? { bg: "#444461", card: "bg-[#3B3B56]/80", cardBorder: "border-[#5D5D7A]/50", text: "text-neutral-100", textSub: "text-[#B0B0C8]", textMuted: "text-[#8888A6]", navBg: "bg-[#3B3B56]/80", inputBg: "bg-[#363650]/70", inputBorder: "border-[#5D5D7A]/40", pillBg: "bg-[#363650]/60", pillActive: "bg-[#52526E]", accent: "#F05917", btnBg: "bg-[#F05917]", btnHover: "hover:bg-[#d94e14]", btnText: "text-white", contentText: "#D6D6D6", titleText: "#D65926" }
+    ? { bg: "#3A3A5C", card: "bg-[#3B3B56]/60", cardBorder: "border-[#6B6B8A]/40", text: "text-neutral-100", textSub: "text-[#B0B0C8]", textMuted: "text-[#8888A6]", navBg: "bg-[#3B3B56]/60", inputBg: "bg-[#363650]/50", inputBorder: "border-[#6B6B8A]/35", pillBg: "bg-[#363650]/45", pillActive: "bg-[#52526E]/80", accent: "#FF6B2B", btnBg: "bg-[#FF6B2B]", btnHover: "hover:bg-[#E85A1A]", btnText: "text-white", contentText: "#D6D6D6", titleText: "#FF6B2B" }
     : { bg: "#DED5CC", card: "bg-white/65", cardBorder: "border-neutral-200/40", text: "text-neutral-900", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-white/70", inputBg: "bg-white/60", inputBorder: "border-neutral-200/50", pillBg: "bg-neutral-100/60", pillActive: "bg-white", accent: "#F05917", btnBg: "bg-[#F05917]", btnHover: "hover:bg-[#d94e14]", btnText: "text-white", contentText: "#262626", titleText: "#1C1C1C" }
 
   useEffect(() => { localStorage.setItem("theme-dark", String(dark)) }, [dark])
@@ -223,7 +223,7 @@ function App() {
   ]
 
   if (loading) return (
-    <div className="flex min-h-screen items-center justify-center" style={{ background: dark ? '#444461' : '#DED5CC' }}>
+    <div className="flex min-h-screen items-center justify-center" style={{ background: dark ? '#3A3A5C' : '#DED5CC' }}>
       <div className="flex flex-col items-center gap-3">
         <Loader2 size={32} className="animate-spin" style={{ color: '#F05917' }} />
         <span className={`text-sm font-medium ${theme.textMuted}`}>載入中...</span>
@@ -232,18 +232,18 @@ function App() {
   )
 
   return (
-    <div className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ fontFamily: "'Inter', 'Noto Serif TC', sans-serif", background: dark ? '#444461' : '#DED5CC' }}>
+    <div className="relative min-h-screen overflow-hidden transition-colors duration-300" style={{ fontFamily: "'Inter', 'Noto Serif TC', sans-serif", background: dark ? '#3A3A5C' : '#DED5CC' }}>
       {/* Subtle blobs for glassmorphism depth */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <div className={`absolute -top-32 -left-32 h-[500px] w-[500px] rounded-full blur-2xl ${dark ? 'bg-neutral-700/20' : 'bg-neutral-300/25'}`} />
         <div className={`absolute top-1/3 right-0 h-96 w-96 rounded-full blur-2xl ${dark ? 'bg-neutral-600/15' : 'bg-neutral-200/30'}`} />
-        <div className={`absolute bottom-0 left-1/3 h-80 w-80 rounded-full blur-2xl ${dark ? 'bg-[#F05917]/8' : 'bg-[#F05917]/5'}`} />
+        <div className={`absolute bottom-0 left-1/3 h-80 w-80 rounded-full blur-2xl ${dark ? 'bg-[#FF6B2B]/10' : 'bg-[#F05917]/5'}`} />
       </div>
-      <nav className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-300 ${dark ? 'border-[#5D5D7A]/40 bg-[#3B3B56]/85' : 'border-neutral-200/50 bg-white/80'}`}>
+      <nav className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-300 ${dark ? 'border-[#6B6B8A]/30 bg-[#3B3B56]/60' : 'border-neutral-200/50 bg-white/80'}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-8 py-4">
           <div className="flex items-center gap-4">
             <h1 className={`text-3xl font-black tracking-tight`} style={{ fontFamily: "'Inter', sans-serif", letterSpacing: '-0.04em' }}>
-              <span style={{ color: '#F05917' }}>V</span><span className={theme.text}>.</span>
+              <span style={{ color: '#FF6B2B' }}>V</span><span className={theme.text}>.</span>
             </h1>
             <span className={`text-[15px] font-bold ${theme.textSub}`}>工作時程</span>
             {loading ? <Loader2 size={12} className="animate-spin" style={{ color: theme.accent }} /> : synced ? <Cloud size={12} className={theme.textMuted} /> : <CloudOff size={12} className={theme.textMuted} />}
@@ -264,7 +264,7 @@ function App() {
             </button>
             <div className="relative" ref={settingsRef}>
               <button onClick={() => { setShowSettings(!showSettings); playClick() }}
-                className={`rounded-xl p-2.5 transition-all ${showSettings ? (dark ? 'bg-[#F05917] text-white' : 'bg-[#F05917] text-white') : (dark ? 'bg-[#52526E] text-[#C8C8DC] hover:bg-[#5D5D7A]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60')}`}>
+                className={`rounded-xl p-2.5 transition-all ${showSettings ? (dark ? 'bg-[#FF6B2B] text-white' : 'bg-[#F05917] text-white') : (dark ? 'bg-[#52526E] text-[#C8C8DC] hover:bg-[#5D5D7A]' : 'bg-neutral-100/60 text-neutral-500 hover:bg-neutral-200/60')}`}>
                 <Type size={16} />
               </button>
               {showSettings && (
@@ -593,7 +593,7 @@ function GanttView({ tasks, onEdit, onUpdateDates, dark, theme, fs, ls }) {
             ))}
           </div>
           {todayIndex >= 0 && (
-            <div className={`pointer-events-none absolute top-0 bottom-0 z-10 w-px ${dark ? 'bg-[#F05917]/50' : 'bg-neutral-400/40'}`} style={{ left: `${((todayIndex + 0.5) / rangeDays) * 100}%` }} />
+            <div className={`pointer-events-none absolute top-0 bottom-0 z-10 w-px ${dark ? 'bg-[#FF6B2B]/60' : 'bg-neutral-400/40'}`} style={{ left: `${((todayIndex + 0.5) / rangeDays) * 100}%` }} />
           )}
           <div className="relative" ref={containerRef}>
             {sortedTasks.map((task) => {
@@ -659,7 +659,7 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
   const addTag = () => { if (tagInput.trim() && !form.tags.find(t => t.text === tagInput.trim())) { setForm({ ...form, tags: [...form.tags, { text: tagInput.trim(), color: selectedTagColor }] }); setTagInput(""); setShowTagSuggestions(false) } }
   const addExistingTag = (lb) => { if (!form.tags.find(t => t.text === lb.text)) { setForm({ ...form, tags: [...form.tags, lb] }); setTagInput(""); setShowTagSuggestions(false) } }
   const removeTag = (text) => setForm({ ...form, tags: form.tags.filter((x) => x.text !== text) })
-  const inputClass = `w-full rounded-xl border ${dark ? 'border-[#5D5D7A]/40 bg-[#363650]/70 text-neutral-100' : 'border-neutral-200/60 bg-white/60 text-neutral-800'} px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${dark ? 'focus:ring-[#F05917]/30' : 'focus:ring-neutral-200/50'}`
+  const inputClass = `w-full rounded-xl border ${dark ? 'border-[#6B6B8A]/35 bg-[#363650]/50 text-neutral-100' : 'border-neutral-200/60 bg-white/60 text-neutral-800'} px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${dark ? 'focus:ring-[#FF6B2B]/30' : 'focus:ring-neutral-200/50'}`
   const labelClass = `mb-1.5 block text-[12px] font-bold uppercase tracking-widest ${theme.textSub}`
   const tabs = [
     { id: "basic", label: "基本" },
