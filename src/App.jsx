@@ -158,8 +158,9 @@ function App() {
     let result = tasks
     if (search) { const q = search.toLowerCase(); result = result.filter((t) => t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q)) }
     if (filterPriority !== "all") result = result.filter((t) => t.priority === filterPriority)
+    if (filterLabel) result = result.filter((t) => (t.tags || []).some(tag => migrateTag(tag).text === filterLabel))
     return result
-  }, [tasks, search, filterPriority])
+  }, [tasks, search, filterPriority, filterLabel])
 
   const handleSave = async (form) => {
     if (editTask) {
@@ -185,8 +186,19 @@ function App() {
     const { error } = await supabase.from('tasks').update({ column: col }).eq('id', id)
     if (error) { console.error('Drop error:', error); setSynced(false) } else setSynced(true)
   }
+  const handleUpdateDates = async (id, startDate, endDate) => {
+    setTasks(tasks.map((t) => (t.id === id ? { ...t, startDate, endDate } : t)))
+    const { error } = await supabase.from('tasks').update({ start_date: startDate, end_date: endDate }).eq('id', id)
+    if (error) { console.error('Date update error:', error); setSynced(false) } else setSynced(true)
+  }
   const openNew = () => { setEditTask(null); setShowModal(true) }
   const openEdit = (t) => { setEditTask(t); setShowModal(true) }
+  const [filterLabel, setFilterLabel] = useState(null)
+  const globalLabels = useMemo(() => {
+    const map = new Map()
+    tasks.forEach(t => (t.tags || []).forEach(tag => { const mt = migrateTag(tag); if (!map.has(mt.text)) map.set(mt.text, mt) }))
+    return [...map.values()]
+  }, [tasks])
 
   const views = [
     { id: "board", label: "看板", icon: LayoutGrid },
@@ -283,6 +295,26 @@ function App() {
         </div>
       </nav>
 
+      {/* Label Filter Bar */}
+      {globalLabels.length > 0 && (
+        <div className="mx-auto max-w-7xl px-8 pt-5">
+          <div className={`flex items-center gap-2 overflow-x-auto rounded-xl border p-2.5 ${dark ? 'border-white/10 bg-[#353434]/50' : 'border-white/10 bg-white/50'}`} style={{ backdropFilter: 'blur(12px)' }}>
+            <Tag size={13} className={theme.textMuted} />
+            <button onClick={() => setFilterLabel(null)}
+              className={`shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${!filterLabel ? `${theme.btnBg} ${theme.btnText}` : `${dark ? 'text-neutral-400 hover:bg-[#454444]' : 'text-neutral-500 hover:bg-neutral-100/80'}`}`}>
+              全部
+            </button>
+            {globalLabels.map((lb) => (
+              <button key={lb.text} onClick={() => setFilterLabel(filterLabel === lb.text ? null : lb.text)}
+                className={`shrink-0 rounded-lg px-3 py-1.5 text-[11px] font-bold transition-all ${filterLabel === lb.text ? 'text-white shadow-sm' : 'hover:brightness-90'}`}
+                style={filterLabel === lb.text ? { backgroundColor: lb.color } : { backgroundColor: `${lb.color}20`, color: lb.color }}>
+                {lb.text}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="mx-auto flex max-w-7xl gap-8 px-8 py-8">
         <aside className="hidden w-[220px] shrink-0 lg:block">
           <GlassCard className="p-5" intensity="light" dark={dark}>
@@ -328,14 +360,14 @@ function App() {
           <AnimatePresence mode="wait">
             {view === "board" && <BoardView key="board" tasks={filtered} columns={COLUMNS} onEdit={openEdit} onDrop={handleDrop} dragItem={dragItem} setDragItem={setDragItem} dark={dark} theme={theme} fs={fs} ls={ls} />}
             {view === "calendar" && <CalendarView key="calendar" tasks={filtered} onEdit={openEdit} dark={dark} theme={theme} fs={fs} ls={ls} />}
-            {view === "gantt" && <GanttView key="gantt" tasks={filtered} onEdit={openEdit} dark={dark} theme={theme} fs={fs} ls={ls} />}
+            {view === "gantt" && <GanttView key="gantt" tasks={filtered} onEdit={openEdit} onUpdateDates={handleUpdateDates} dark={dark} theme={theme} fs={fs} ls={ls} />}
           </AnimatePresence>
         </main>
       </div>
 
       <AnimatePresence>
         {showModal && (
-          <TaskModal task={editTask} onSave={handleSave} onDelete={handleDelete} onClose={() => { setShowModal(false); setEditTask(null) }} dark={dark} theme={theme} />
+          <TaskModal task={editTask} onSave={handleSave} onDelete={handleDelete} onClose={() => { setShowModal(false); setEditTask(null) }} dark={dark} theme={theme} globalLabels={globalLabels} />
         )}
       </AnimatePresence>
     </div>
@@ -461,8 +493,10 @@ function CalendarView({ tasks, onEdit, dark, theme, fs, ls }) {
   )
 }
 
-function GanttView({ tasks, onEdit, dark, theme, fs, ls }) {
+function GanttView({ tasks, onEdit, onUpdateDates, dark, theme, fs, ls }) {
   const [rangeDays, setRangeDays] = useState(21)
+  const dragRef = useRef(null)
+  const containerRef = useRef(null)
   const today = new Date()
   today.setHours(0, 0, 0, 0)
   const startDate = useMemo(() => {
@@ -480,6 +514,33 @@ function GanttView({ tasks, onEdit, dark, theme, fs, ls }) {
     const endIdx = Math.min(rangeDays - 1, Math.round((e - startDate) / 86400000))
     if (endIdx < 0 || startIdx >= rangeDays) return null
     return { left: `${(startIdx / rangeDays) * 100}%`, width: `${(Math.max(1, endIdx - startIdx + 1) / rangeDays) * 100}%` }
+  }
+  const handleBarDrag = (e, task, edge) => {
+    e.stopPropagation(); e.preventDefault()
+    const container = containerRef.current
+    if (!container) return
+    const rect = container.getBoundingClientRect()
+    const dayW = rect.width / rangeDays
+    const startX = e.clientX
+    const origStart = new Date(task.startDate); origStart.setHours(0,0,0,0)
+    const origEnd = new Date(task.endDate); origEnd.setHours(0,0,0,0)
+    const onMove = (ev) => {
+      const dx = ev.clientX - startX
+      const daysDelta = Math.round(dx / dayW)
+      if (daysDelta === 0) return
+      let newStart = new Date(origStart), newEnd = new Date(origEnd)
+      if (edge === 'move') { newStart.setDate(newStart.getDate() + daysDelta); newEnd.setDate(newEnd.getDate() + daysDelta) }
+      else if (edge === 'start') { newStart.setDate(newStart.getDate() + daysDelta); if (newStart >= newEnd) return }
+      else if (edge === 'end') { newEnd.setDate(newEnd.getDate() + daysDelta); if (newEnd <= newStart) return }
+      dragRef.current = { id: task.id, startDate: localDateStr(newStart), endDate: localDateStr(newEnd) }
+    }
+    const onUp = () => {
+      document.removeEventListener('mousemove', onMove)
+      document.removeEventListener('mouseup', onUp)
+      if (dragRef.current) { onUpdateDates(dragRef.current.id, dragRef.current.startDate, dragRef.current.endDate); dragRef.current = null }
+    }
+    document.addEventListener('mousemove', onMove)
+    document.addEventListener('mouseup', onUp)
   }
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -8 }}>
@@ -509,7 +570,7 @@ function GanttView({ tasks, onEdit, dark, theme, fs, ls }) {
           {todayIndex >= 0 && (
             <div className={`pointer-events-none absolute top-0 bottom-0 z-10 w-px ${dark ? 'bg-[#F05917]/50' : 'bg-neutral-400/40'}`} style={{ left: `${((todayIndex + 0.5) / rangeDays) * 100}%` }} />
           )}
-          <div className="relative">
+          <div className="relative" ref={containerRef}>
             {sortedTasks.map((task) => {
               const style = getBarStyle(task)
               if (!style) return null
@@ -519,9 +580,16 @@ function GanttView({ tasks, onEdit, dark, theme, fs, ls }) {
                   <div className="relative h-7 flex-1">
                     <motion.div initial={{ scaleX: 0, opacity: 0 }} animate={{ scaleX: 1, opacity: 1 }}
                       transition={{ type: "spring", stiffness: 200, damping: 25 }}
-                      onClick={() => onEdit(task)} className="absolute top-0 h-full cursor-pointer rounded-md transition-all group-hover:brightness-95"
-                      style={{ left: style.left, width: style.width, originX: 0, backgroundColor: `${task.color}15`, borderLeft: `3px solid ${task.color}` }}>
-                      <span className={`absolute inset-0 flex items-center truncate px-2 font-medium ${theme.textSub}`} style={{ fontSize: `${10 * fs}px` }}>{task.title}</span>
+                      className="absolute top-0 h-full rounded-md transition-all group-hover:brightness-95"
+                      style={{ left: style.left, width: style.width, originX: 0, backgroundColor: `${task.color}15`, borderLeft: `3px solid ${task.color}`, cursor: 'grab' }}
+                      onMouseDown={(e) => handleBarDrag(e, task, 'move')}>
+                      {/* Left resize handle */}
+                      <div className="absolute left-0 top-0 h-full w-2 cursor-col-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                        onMouseDown={(e) => handleBarDrag(e, task, 'start')} />
+                      <span className={`absolute inset-0 flex items-center truncate px-2 font-medium ${theme.textSub} pointer-events-none`} style={{ fontSize: `${10 * fs}px` }}>{task.title}</span>
+                      {/* Right resize handle */}
+                      <div className="absolute right-0 top-0 h-full w-2 cursor-col-resize opacity-0 group-hover:opacity-100 transition-opacity"
+                        onMouseDown={(e) => handleBarDrag(e, task, 'end')} />
                     </motion.div>
                   </div>
                 </div>
@@ -542,7 +610,7 @@ function GanttView({ tasks, onEdit, dark, theme, fs, ls }) {
   )
 }
 
-function TaskModal({ task, onSave, onDelete, onClose, dark, theme }) {
+function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels }) {
   const [form, setForm] = useState(task ? { ...task, tags: (task.tags || []).map(migrateTag) } : {
     title: "", description: "", column: "todo", priority: "medium",
     startDate: localDateStr(new Date()),
@@ -552,7 +620,14 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme }) {
   const [tab, setTab] = useState("basic")
   const [tagInput, setTagInput] = useState("")
   const [selectedTagColor, setSelectedTagColor] = useState(TAG_COLORS[0].color)
-  const addTag = () => { if (tagInput.trim() && !form.tags.find(t => t.text === tagInput.trim())) { setForm({ ...form, tags: [...form.tags, { text: tagInput.trim(), color: selectedTagColor }] }); setTagInput("") } }
+  const [showTagSuggestions, setShowTagSuggestions] = useState(false)
+  const tagSuggestions = useMemo(() => {
+    if (!tagInput.trim()) return (globalLabels || []).filter(lb => !form.tags.find(t => t.text === lb.text))
+    const q = tagInput.toLowerCase()
+    return (globalLabels || []).filter(lb => lb.text.toLowerCase().includes(q) && !form.tags.find(t => t.text === lb.text))
+  }, [tagInput, globalLabels, form.tags])
+  const addTag = () => { if (tagInput.trim() && !form.tags.find(t => t.text === tagInput.trim())) { setForm({ ...form, tags: [...form.tags, { text: tagInput.trim(), color: selectedTagColor }] }); setTagInput(""); setShowTagSuggestions(false) } }
+  const addExistingTag = (lb) => { if (!form.tags.find(t => t.text === lb.text)) { setForm({ ...form, tags: [...form.tags, lb] }); setTagInput(""); setShowTagSuggestions(false) } }
   const removeTag = (text) => setForm({ ...form, tags: form.tags.filter((x) => x.text !== text) })
   const inputClass = `w-full rounded-xl border ${dark ? 'border-[#C24C11]/30 bg-[#3a3939]/60 text-neutral-100' : 'border-neutral-200/60 bg-white/60 text-neutral-800'} px-3 py-2.5 text-sm transition-all focus:outline-none focus:ring-2 ${dark ? 'focus:ring-[#F05917]/30' : 'focus:ring-neutral-200/50'}`
   const labelClass = `mb-1.5 block text-[12px] font-bold uppercase tracking-widest ${theme.textSub}`
@@ -658,10 +733,23 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme }) {
                         style={{ backgroundColor: tc.color, ringColor: tc.color }} />
                     ))}
                   </div>
-                  <div className="flex gap-2">
-                    <input className={`${inputClass} flex-1`} value={tagInput} onChange={(e) => setTagInput(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())} placeholder="輸入標籤..." />
+                  <div className="relative flex gap-2">
+                    <input className={`${inputClass} flex-1`} value={tagInput}
+                      onChange={(e) => { setTagInput(e.target.value); setShowTagSuggestions(true) }}
+                      onFocus={() => setShowTagSuggestions(true)}
+                      onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addTag())} placeholder="輸入或選擇標籤..." />
                     <button onClick={addTag} className={`rounded-xl px-4 text-[12px] font-bold text-white transition-all hover:brightness-90`} style={{ backgroundColor: selectedTagColor }}>加入</button>
+                    {showTagSuggestions && tagSuggestions.length > 0 && (
+                      <div className={`absolute left-0 top-full z-50 mt-1 max-h-[140px] w-full overflow-y-auto rounded-xl border shadow-lg ${dark ? 'border-white/10 bg-[#353434]/95' : 'border-white/10 bg-white/95'}`} style={{ backdropFilter: 'blur(12px)' }}>
+                        {tagSuggestions.map((lb) => (
+                          <button key={lb.text} onClick={() => addExistingTag(lb)}
+                            className={`flex w-full items-center gap-2 px-3 py-2 text-left text-[12px] font-medium transition-all ${dark ? 'text-neutral-300 hover:bg-[#454444]' : 'text-neutral-600 hover:bg-neutral-50'}`}>
+                            <span className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: lb.color }} />
+                            {lb.text}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   {form.tags.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1.5">
