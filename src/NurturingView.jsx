@@ -1,13 +1,13 @@
 import { useState, useMemo, useCallback, memo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { Plus, X, DollarSign, FileText, Clock, ChevronDown, ChevronUp } from "lucide-react"
+import { playPickup, playClick } from "./utils/audio"
+import { localDateStr } from "./utils/date"
 
 /* \u57f9\u80b2\u4e2d\u5fc3 \u2014 Nurturing Dashboard
    \u8ffd\u8e64\u9577\u671f\u5275\u4f5c\u9805\u76ee\u7684\u300c\u751f\u9577\u6642\u9593\u300d
    \u8996\u89ba\u8a2d\u8a08\uff1a\u6578\u5b57\u5e8f\u5217\u611f DAY 0XX + \u5b57\u9593\u8ddd\u7f8e\u5b78
    \u4e0d\u7528 backdrop-filter\uff0c\u6539\u7528 rgba + \u7d30\u908a\u6846 */
-
-const localDateStr = (d) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
 
 function calcDays(startDate) {
   if (!startDate) return 0
@@ -371,7 +371,7 @@ function NurturingCard({ task, dark, theme, fs, ls, onToggleExpand, expanded, on
   )
 }
 
-function NurturingView({ tasks, setTasks, dark, theme, fs, ls, supabase, toDb, setSynced, playPickup, playClick }) {
+function NurturingView({ tasks, setTasks, dark, theme, fs, ls, supabase, toDb, setSynced }) {
   const [expandedIds, setExpandedIds] = useState(new Set())
 
   const nurturingTasks = useMemo(
@@ -390,7 +390,7 @@ function NurturingView({ tasks, setTasks, dark, theme, fs, ls, supabase, toDb, s
 
   /* \u65b0\u589e\u4e8b\u4ef6\u7d00\u9304 */
   const handleAddRecord = useCallback(async (taskId, record) => {
-    if (playPickup) playPickup()
+    playPickup()
     setTasks(prev => prev.map(t => {
       if (t.id !== taskId) return t
       return { ...t, incomeRecords: [...(t.incomeRecords || []), record] }
@@ -401,7 +401,7 @@ function NurturingView({ tasks, setTasks, dark, theme, fs, ls, supabase, toDb, s
       const { error } = await supabase.from('tasks').upsert(toDb(updated))
       if (error) { console.error('Record save error:', error); setSynced(false) } else setSynced(true)
     }
-  }, [tasks, setTasks, supabase, toDb, setSynced, playPickup])
+  }, [tasks, setTasks, supabase, toDb, setSynced])
 
   /* \u66f4\u65b0\u5099\u8a3b */
   const handleUpdateNotes = useCallback(async (taskId, notes) => {

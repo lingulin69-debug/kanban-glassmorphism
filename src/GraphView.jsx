@@ -15,20 +15,7 @@ import {
 } from "@xyflow/react"
 import "@xyflow/react/dist/style.css"
 import { Link2, Unlink, Maximize2 } from "lucide-react"
-
-// 音效 — 300% 增益
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)()
-const createLoudSound = (src, gain) => {
-  const audio = new Audio(src)
-  const source = audioCtx.createMediaElementSource(audio)
-  const gainNode = audioCtx.createGain()
-  gainNode.gain.value = gain
-  source.connect(gainNode).connect(audioCtx.destination)
-  return audio
-}
-const clickSound = createLoudSound('/audio/Random2.wav', 3.0)
-const resumeAudio = () => { if (audioCtx.state === 'suspended') audioCtx.resume() }
-const playClick = () => { resumeAudio(); clickSound.currentTime = 0; clickSound.play().catch(() => {}) }
+import { playClick } from "./utils/audio"
 
 /* ========================================
    Handle 樣式常數
@@ -271,9 +258,28 @@ export default function GraphView({
     setEdges(buildEdges(tasks))
   }, [tasks, dark, theme, fs, onEdit])
 
+  // 檢測循環依賴
+  const wouldCreateCycle = useCallback((source, target) => {
+    const visited = new Set()
+    const dfs = (nodeId) => {
+      if (nodeId === target) return false
+      if (nodeId === source) return true
+      if (visited.has(nodeId)) return false
+      visited.add(nodeId)
+      const task = tasks.find(t => t.id === nodeId)
+      return (task?.dependencies || []).some(dep => dfs(dep))
+    }
+    return dfs(source)
+  }, [tasks])
+
   // 新增連線 → 更新 dependencies
   const onConnect = useCallback(
     (params) => {
+      if (params.source === params.target) return
+      if (wouldCreateCycle(params.source, params.target)) {
+        console.warn('Cyclic dependency detected, connection rejected')
+        return
+      }
       setEdges((eds) => addEdge({
         ...params,
         animated: false,
@@ -293,7 +299,7 @@ export default function GraphView({
         onSaveDeps(params.target, deps)
       }
     },
-    [dark, tasks, onSaveDeps]
+    [dark, tasks, onSaveDeps, wouldCreateCycle]
   )
 
   // 刪除邊 → 更新 dependencies
