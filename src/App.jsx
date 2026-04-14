@@ -8,6 +8,7 @@ import {
 } from "lucide-react"
 import { supabase } from "./supabaseClient"
 import GraphView from "./GraphView"
+import NurturingView from "./NurturingView"
 
 function loadAssets() {
   if (!document.querySelector('link[href*="fonts.googleapis"]')) {
@@ -32,9 +33,11 @@ const createLoudSound = (src, gain) => {
 }
 const switchSound = createLoudSound('/audio/Random 1.wav', 3.0)
 const clickSound = createLoudSound('/audio/Random2.wav', 3.0)
+const pickupSound = createLoudSound('/audio/Pickup1.wav', 3.0)
 const resumeAudio = () => { if (audioCtx.state === 'suspended') audioCtx.resume() }
 const playSwitch = () => { resumeAudio(); switchSound.currentTime = 0; switchSound.play().catch(() => {}) }
 const playClick = () => { resumeAudio(); clickSound.currentTime = 0; clickSound.play().catch(() => {}) }
+const playPickup = () => { resumeAudio(); pickupSound.currentTime = 0; pickupSound.play().catch(() => {}) }
 
 function GlassCard({ children, className = "", intensity = "medium", dark = false, ...props }) {
   const bg = dark
@@ -96,8 +99,8 @@ const migrateTag = (t) => {
   if (t && typeof t === 'object' && t.text) return t
   return { text: String(t), color: TAG_COLORS[0].color }
 }
-const toDb = (t) => ({ id: t.id, title: t.title, description: t.description, column: t.column, priority: t.priority, start_date: t.startDate || null, end_date: t.endDate || null, tags: (t.tags || []).map(migrateTag), color: t.color || '#8B9DAF', dependencies: t.dependencies || [] })
-const fromDb = (r) => ({ id: r.id, title: r.title, description: r.description || '', column: r.column, priority: r.priority, startDate: r.start_date || '', endDate: r.end_date || '', tags: (r.tags || []).map(migrateTag), color: r.color || '#8B9DAF', dependencies: r.dependencies || [] })
+const toDb = (t) => ({ id: t.id, title: t.title, description: t.description, column: t.column, priority: t.priority, start_date: t.startDate || null, end_date: t.endDate || null, tags: (t.tags || []).map(migrateTag), color: t.color || '#8B9DAF', dependencies: t.dependencies || [], is_nurturing: t.isNurturing || false, income_records: t.incomeRecords || [], notes: t.notes || '' })
+const fromDb = (r) => ({ id: r.id, title: r.title, description: r.description || '', column: r.column, priority: r.priority, startDate: r.start_date || '', endDate: r.end_date || '', tags: (r.tags || []).map(migrateTag), color: r.color || '#8B9DAF', dependencies: r.dependencies || [], isNurturing: r.is_nurturing || false, incomeRecords: r.income_records || [], notes: r.notes || '' })
 
 /* ============================================
    Swipe Hook — detect horizontal swipe gestures
@@ -212,7 +215,7 @@ function App() {
   useEffect(() => { localStorage.setItem("theme-dark", String(dark)) }, [dark])
 
   // Swipe to switch views
-  const viewIds = ["board", "calendar", "gantt", "graph"]
+  const viewIds = ["board", "calendar", "gantt", "graph", "nurturing"]
   const swipeHandlers = useSwipe(
     () => { const idx = viewIds.indexOf(view); if (idx < viewIds.length - 1) { setView(viewIds[idx + 1]); playSwitch() } },
     () => { const idx = viewIds.indexOf(view); if (idx > 0) { setView(viewIds[idx - 1]); playSwitch() } }
@@ -220,7 +223,7 @@ function App() {
 
   // Reorderable view tabs state
   const [viewOrder, setViewOrder] = useState(() => {
-    try { const s = localStorage.getItem("view-order"); if (s) { const arr = JSON.parse(s); if (!arr.includes("graph")) arr.push("graph"); return arr } return ["board", "calendar", "gantt", "graph"] } catch { return ["board", "calendar", "gantt", "graph"] }
+    try { const s = localStorage.getItem("view-order"); if (s) { const arr = JSON.parse(s); if (!arr.includes("graph")) arr.push("graph"); if (!arr.includes("nurturing")) arr.push("nurturing"); return arr } return ["board", "calendar", "gantt", "graph", "nurturing"] } catch { return ["board", "calendar", "gantt", "graph", "nurturing"] }
   })
   useEffect(() => { localStorage.setItem("view-order", JSON.stringify(viewOrder)) }, [viewOrder])
 
@@ -329,6 +332,7 @@ function App() {
     calendar: { label: "月曆", icon: Calendar },
     gantt: { label: "甘特圖", icon: BarChart3 },
     graph: { label: "關聯圖", icon: Workflow },
+    nurturing: { label: "培育", icon: Sparkles },
   }
 
   if (loading) return (
@@ -537,6 +541,7 @@ function App() {
             <div style={{ display: view === "graph" ? "block" : "none" }}>
               <GraphView tasks={filtered} onEdit={openEdit} onSaveDeps={handleSaveDeps} dark={dark} theme={theme} fs={fs} />
             </div>
+            {view === "nurturing" && <NurturingView key="nurturing" tasks={tasks} setTasks={setTasks} dark={dark} theme={theme} fs={fs} ls={ls} supabase={supabase} toDb={toDb} setSynced={setSynced} playPickup={playPickup} playClick={playClick} />}
         </main>
       </div>
 
@@ -901,7 +906,7 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
     title: "", description: "", column: "todo", priority: "medium",
     startDate: localDateStr(new Date()),
     endDate: localDateStr(new Date(Date.now() + 7 * 86400000)),
-    tags: [], color: MORANDI_COLORS[0]
+    tags: [], color: MORANDI_COLORS[0], isNurturing: false
   })
   const [tab, setTab] = useState("basic")
   const [tagInput, setTagInput] = useState("")
@@ -983,6 +988,15 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
                       </button>
                     ))}
                   </div>
+                </div>
+                {/* 培育開關 */}
+                <div className="flex items-center justify-between">
+                  <label className={labelClass} style={{ marginBottom: 0 }}>加入培育計畫</label>
+                  <button onClick={() => { setForm({ ...form, isNurturing: !form.isNurturing }); playClick() }}
+                    className={`relative h-7 w-12 rounded-full transition-colors duration-200 ${form.isNurturing ? '' : (dark ? 'bg-white/[0.12]' : 'bg-neutral-200')}`}
+                    style={form.isNurturing ? { backgroundColor: theme.accent } : {}}>
+                    <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform duration-200 ${form.isNurturing ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                  </button>
                 </div>
               </motion.div>
             )}

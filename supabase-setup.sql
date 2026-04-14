@@ -20,6 +20,11 @@ create table if not exists public.tasks (
 -- 如果 tasks 表已存在，新增 dependencies 欄位
 alter table public.tasks add column if not exists dependencies jsonb default '[]';
 
+-- 培育中心所需欄位
+alter table public.tasks add column if not exists is_nurturing boolean default false;
+alter table public.tasks add column if not exists income_records jsonb default '[]';
+alter table public.tasks add column if not exists notes text default '';
+
 -- 啟用 RLS（行級安全）
 alter table public.tasks enable row level security;
 
