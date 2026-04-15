@@ -977,9 +977,9 @@ function TaskModal({ task, onSave, onDelete, onClose, dark, theme, globalLabels 
                 <div className="flex items-center justify-between">
                   <label className={labelClass} style={{ marginBottom: 0 }}>加入培育計畫</label>
                   <button onClick={() => { setForm({ ...form, isNurturing: !form.isNurturing }); playClick() }}
-                    className={`relative h-7 w-12 rounded-full transition-colors duration-200 ${form.isNurturing ? '' : (dark ? 'bg-white/[0.12]' : 'bg-neutral-200')}`}
+                    className={`relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors duration-200 ${form.isNurturing ? '' : (dark ? 'bg-white/[0.12]' : 'bg-neutral-200')}`}
                     style={form.isNurturing ? { backgroundColor: theme.accent } : {}}>
-                    <span className={`absolute top-0.5 h-6 w-6 rounded-full bg-white shadow transition-transform duration-200 ${form.isNurturing ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    <span className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-md ring-0 transition-transform duration-200 ${form.isNurturing ? 'translate-x-6' : 'translate-x-1'}`} />
                   </button>
                 </div>
               </motion.div>

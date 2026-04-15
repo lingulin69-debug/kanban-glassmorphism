@@ -1,6 +1,6 @@
-import { useState, useMemo, useCallback, memo } from "react"
+import { useState, useMemo, useCallback, useRef, memo } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { Plus, X, DollarSign, FileText, Clock, ChevronDown, ChevronUp } from "lucide-react"
+import { Plus, X, DollarSign, FileText, Clock, ChevronDown, ChevronUp, Check, Pencil, Trash2 } from "lucide-react"
 import { playPickup, playClick } from "./utils/audio"
 import { localDateStr } from "./utils/date"
 
@@ -22,12 +22,18 @@ function formatDay(n) {
   return String(n).padStart(3, '0')
 }
 
-function NurturingCard({ task, dark, theme, fs, ls, onToggleExpand, expanded, onAddRecord, onUpdateNotes }) {
+function NurturingCard({ task, dark, theme, fs, ls, onToggleExpand, expanded, onAddRecord, onUpdateNotes, onDeleteRecord, onEditRecord }) {
   const days = calcDays(task.startDate)
   const totalIncome = (task.incomeRecords || []).reduce((sum, r) => sum + (r.amount || 0), 0)
   const [showRecordForm, setShowRecordForm] = useState(false)
   const [recordAmount, setRecordAmount] = useState("")
   const [recordNote, setRecordNote] = useState("")
+  const [notesSaved, setNotesSaved] = useState(false)
+  const [editingRecordId, setEditingRecordId] = useState(null)
+  const [editAmount, setEditAmount] = useState("")
+  const [editNote, setEditNote] = useState("")
+  const notesRef = useRef(task.notes || '')
+  const saveTimerRef = useRef(null)
 
   const handleSubmitRecord = () => {
     const amount = parseFloat(recordAmount)
@@ -217,9 +223,32 @@ function NurturingCard({ task, dark, theme, fs, ls, onToggleExpand, expanded, on
                     minHeight: '60px'
                   }}
                   value={task.notes || ''}
-                  onChange={(e) => onUpdateNotes(task.id, e.target.value)}
+                  onChange={(e) => {
+                    const val = e.target.value
+                    onUpdateNotes(task.id, val)
+                    setNotesSaved(false)
+                    if (saveTimerRef.current) clearTimeout(saveTimerRef.current)
+                    saveTimerRef.current = setTimeout(() => {
+                      setNotesSaved(true)
+                      setTimeout(() => setNotesSaved(false), 1500)
+                    }, 600)
+                  }}
                   placeholder={'\u8a18\u9304\u60f3\u6cd5\u8207\u9032\u5c55...'}
                 />
+                <AnimatePresence>
+                  {notesSaved && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0 }}
+                      className="flex items-center gap-1 mt-1"
+                      style={{ color: '#6EA667', fontSize: `${11 * fs}px` }}
+                    >
+                      <Check size={12} />
+                      <span>{'\u5DF2\u5132\u5B58'}</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
               {/* \u6642\u9593\u8ef8 */}
@@ -237,7 +266,7 @@ function NurturingCard({ task, dark, theme, fs, ls, onToggleExpand, expanded, on
                   </div>
                   <div className="space-y-0">
                     {[...(task.incomeRecords || [])].reverse().map((record, idx) => (
-                      <div key={record.id} className="flex items-start gap-3 py-2" style={{ borderBottom: idx < (task.incomeRecords || []).length - 1 ? `1px solid ${dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` : 'none' }}>
+                      <div key={record.id} className="group flex items-start gap-3 py-2" style={{ borderBottom: idx < (task.incomeRecords || []).length - 1 ? `1px solid ${dark ? 'rgba(255,255,255,0.04)' : 'rgba(0,0,0,0.04)'}` : 'none' }}>
                         {/* \u6642\u9593\u8ef8\u7dda\u689d */}
                         <div className="flex flex-col items-center shrink-0 mt-1">
                           <div
@@ -245,43 +274,55 @@ function NurturingCard({ task, dark, theme, fs, ls, onToggleExpand, expanded, on
                             style={{ backgroundColor: record.amount > 0 ? '#6EA667' : (dark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)') }}
                           />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-baseline justify-between gap-2">
-                            <span
-                              className="font-medium tabular-nums"
-                              style={{
-                                fontSize: `${11 * fs}px`,
-                                color: dark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)',
-                                letterSpacing: '0.02em'
-                              }}
-                            >
-                              {record.date}
-                            </span>
-                            {record.amount > 0 && (
-                              <span
-                                className="font-bold tabular-nums shrink-0"
-                                style={{
-                                  fontSize: `${12 * fs}px`,
-                                  color: '#6EA667'
-                                }}
-                              >
-                                +${record.amount.toLocaleString()}
+                        {editingRecordId === record.id ? (
+                          <div className="flex-1 min-w-0 space-y-2">
+                            <div className="flex gap-2">
+                              <input type="number" className="flex-1 rounded-lg px-2 py-1 text-sm focus:outline-none"
+                                style={{ background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)', border: `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, color: theme.contentText, fontSize: `${12 * fs}px` }}
+                                value={editAmount} onChange={(e) => setEditAmount(e.target.value)} placeholder={'\u91D1\u984D'} />
+                            </div>
+                            <input className="w-full rounded-lg px-2 py-1 text-sm focus:outline-none"
+                              style={{ background: dark ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.8)', border: `1px solid ${dark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)'}`, color: theme.contentText, fontSize: `${12 * fs}px` }}
+                              value={editNote} onChange={(e) => setEditNote(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') { const amt = parseFloat(editAmount); onEditRecord(task.id, record.id, { amount: isNaN(amt) ? 0 : amt, note: editNote.trim() }); setEditingRecordId(null) } }}
+                              placeholder={'\u5099\u8A3B'} />
+                            <div className="flex gap-2 justify-end">
+                              <button onClick={() => setEditingRecordId(null)} className="text-xs px-2 py-1 rounded" style={{ color: dark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)' }}>{'\u53D6\u6D88'}</button>
+                              <button onClick={() => { const amt = parseFloat(editAmount); onEditRecord(task.id, record.id, { amount: isNaN(amt) ? 0 : amt, note: editNote.trim() }); setEditingRecordId(null); playClick() }}
+                                className="text-xs px-3 py-1 rounded font-bold text-white" style={{ backgroundColor: theme.accent }}>{'\u5132\u5B58'}</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-baseline justify-between gap-2">
+                              <span className="font-medium tabular-nums" style={{ fontSize: `${11 * fs}px`, color: dark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.35)', letterSpacing: '0.02em' }}>
+                                {record.date}
                               </span>
+                              <div className="flex items-center gap-2">
+                                {record.amount > 0 && (
+                                  <span className="font-bold tabular-nums shrink-0" style={{ fontSize: `${12 * fs}px`, color: '#6EA667' }}>
+                                    +${record.amount.toLocaleString()}
+                                  </span>
+                                )}
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 shrink-0">
+                                  <button onClick={() => { setEditingRecordId(record.id); setEditAmount(String(record.amount || '')); setEditNote(record.note || ''); playClick() }}
+                                    className="p-1 rounded transition-colors" style={{ color: dark ? 'rgba(255,255,255,0.35)' : 'rgba(0,0,0,0.3)' }}>
+                                    <Pencil size={12} />
+                                  </button>
+                                  <button onClick={() => { onDeleteRecord(task.id, record.id); playClick() }}
+                                    className="p-1 rounded transition-colors" style={{ color: '#E85D3A' }}>
+                                    <Trash2 size={12} />
+                                  </button>
+                                </div>
+                              </div>
+                            </div>
+                            {record.note && (
+                              <p className="mt-0.5 leading-relaxed" style={{ fontSize: `${12 * fs}px`, color: theme.contentText, opacity: 0.7 }}>
+                                {record.note}
+                              </p>
                             )}
                           </div>
-                          {record.note && (
-                            <p
-                              className="mt-0.5 leading-relaxed"
-                              style={{
-                                fontSize: `${12 * fs}px`,
-                                color: theme.contentText,
-                                opacity: 0.7
-                              }}
-                            >
-                              {record.note}
-                            </p>
-                          )}
-                        </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -403,7 +444,26 @@ function NurturingView({ tasks, setTasks, dark, theme, fs, ls, supabase, toDb, s
     }
   }, [tasks, setTasks, supabase, toDb, setSynced])
 
-  /* \u66f4\u65b0\u5099\u8a3b */
+  /* 刪除事件紀錄 */
+  const handleDeleteRecord = useCallback(async (taskId, recordId) => {
+    playClick()
+    const task = tasks.find(t => t.id === taskId)
+    if (!task) return
+    const updated = { ...task, incomeRecords: (task.incomeRecords || []).filter(r => r.id !== recordId) }
+    setTasks(prev => prev.map(t => t.id === taskId ? updated : t))
+    const { error } = await supabase.from('tasks').upsert(toDb(updated))
+    if (error) { console.error('Delete record error:', error); setSynced(false) } else setSynced(true)
+  }, [tasks, setTasks, supabase, toDb, setSynced])
+
+  /* 編輯事件紀錄 */
+  const handleEditRecord = useCallback(async (taskId, recordId, changes) => {
+    const task = tasks.find(t => t.id === taskId)
+    if (!task) return
+    const updated = { ...task, incomeRecords: (task.incomeRecords || []).map(r => r.id === recordId ? { ...r, ...changes } : r) }
+    setTasks(prev => prev.map(t => t.id === taskId ? updated : t))
+    const { error } = await supabase.from('tasks').upsert(toDb(updated))
+    if (error) { console.error('Edit record error:', error); setSynced(false) } else setSynced(true)
+  }, [tasks, setTasks, supabase, toDb, setSynced])
   const handleUpdateNotes = useCallback(async (taskId, notes) => {
     setTasks(prev => prev.map(t => t.id === taskId ? { ...t, notes } : t))
     const { error } = await supabase.from('tasks').update({ notes }).eq('id', taskId)
@@ -589,6 +649,8 @@ function NurturingView({ tasks, setTasks, dark, theme, fs, ls, supabase, toDb, s
               onToggleExpand={toggleExpand}
               onAddRecord={handleAddRecord}
               onUpdateNotes={handleUpdateNotes}
+              onDeleteRecord={handleDeleteRecord}
+              onEditRecord={handleEditRecord}
             />
           ))}
         </div>
