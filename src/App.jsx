@@ -194,7 +194,7 @@ function App() {
 
   const theme = dark
     ? { bg: "#14161F", card: "bg-white/[0.06]", cardBorder: "border-white/[0.08]", text: "text-neutral-100", textSub: "text-neutral-400", textMuted: "text-neutral-400", navBg: "bg-white/[0.05]", inputBg: "bg-white/[0.08]", inputBorder: "border-white/[0.1]", pillBg: "bg-white/[0.06]", pillActive: "bg-white/[0.12]", accent: "#EA6B26", btnBg: "bg-[#EA6B26]", btnHover: "hover:bg-[#D45E1F]", btnText: "text-white", contentText: "#E0E0E8", titleText: "#EA6B26" }
-    : { bg: "#DBD4B8", card: "bg-white/70", cardBorder: "border-neutral-200/30", text: "text-neutral-900", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-[#E6DCC8]/80", inputBg: "bg-white/70", inputBorder: "border-neutral-200/40", pillBg: "bg-[#E0DCCA]/50", pillActive: "bg-[#E0DCCA]/90", accent: "#E85D3A", btnBg: "bg-[#E85D3A]", btnHover: "hover:bg-[#D04E2E]", btnText: "text-white", contentText: "#3A3A3A", titleText: "#1A1A1A" }
+    : { bg: "#F0E6D1", card: "bg-white/70", cardBorder: "border-neutral-200/30", text: "text-neutral-900", textSub: "text-neutral-400", textMuted: "text-neutral-500", navBg: "bg-[#B8B3A5]/80", inputBg: "bg-white/70", inputBorder: "border-neutral-200/40", pillBg: "bg-[#E0DCCA]/50", pillActive: "bg-[#E0DCCA]/90", accent: "#E85D3A", btnBg: "bg-[#E85D3A]", btnHover: "hover:bg-[#D04E2E]", btnText: "text-white", contentText: "#3A3A3A", titleText: "#1A1A1A" }
 
   useEffect(() => { localStorage.setItem("theme-dark", String(dark)) }, [dark])
 
@@ -320,7 +320,7 @@ function App() {
   }
 
   if (loading) return (
-    <div className="flex min-h-screen items-center justify-center" style={{ background: dark ? '#14161F' : '#DBD4B8' }}>
+    <div className="flex min-h-screen items-center justify-center" style={{ background: theme.bg }}>
       <div className="flex flex-col items-center gap-3">
         <Loader2 size={32} className="animate-spin" style={{ color: '#E85D3A' }} />
         <span className={`text-sm font-medium ${theme.textMuted}`}>載入中...</span>
@@ -329,7 +329,7 @@ function App() {
   )
 
   return (
-    <div className="relative min-h-screen overflow-hidden transition-colors duration-150" style={{ fontFamily: "'DM Sans', 'Noto Sans TC', sans-serif", background: dark ? '#14161F' : '#DBD4B8' }}
+    <div className="relative min-h-screen overflow-hidden transition-colors duration-150" style={{ fontFamily: "'DM Sans', 'Noto Sans TC', sans-serif", background: theme.bg }}
       {...swipeHandlers}>
       {/* Subtle blobs for glassmorphism depth */}
       <div className="pointer-events-none fixed inset-0 z-0">
@@ -339,14 +339,14 @@ function App() {
       </div>
 
       {/* ========== Top Nav — Mobile Responsive ========== */}
-      <nav className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-150 ${dark ? 'border-white/[0.06] bg-white/[0.04]' : 'border-neutral-200/40 bg-white/80'}`}>
+      <nav className={`sticky top-0 z-40 border-b backdrop-blur-xl transition-colors duration-150 ${dark ? 'border-white/[0.06] bg-white/[0.04]' : 'border-neutral-200/40'} ${theme.navBg}`}>
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-8 py-3 sm:py-4">
           {/* Logo */}
           <div className="flex items-center gap-2 sm:gap-4 shrink-0">
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight" style={{ fontFamily: "'DM Sans', sans-serif", letterSpacing: '-0.04em' }}>
               <span style={{ color: dark ? '#EA6B26' : '#E85D3A' }}>V</span><span className={theme.text}>.</span>
             </h1>
-            <span className={`hidden sm:inline text-[15px] font-semibold ${theme.textSub}`}>工作時程</span>
+            <span className={`hidden sm:inline text-[15px] font-semibold ${dark ? theme.textSub : ''}`} style={dark ? {} : { color: '#FFFFFF' }}>工作時程</span>
             {loading ? <Loader2 size={12} className="animate-spin" style={{ color: theme.accent }} /> : synced ? <Cloud size={12} className={theme.textMuted} /> : <CloudOff size={12} className={theme.textMuted} />}
           </div>
 
